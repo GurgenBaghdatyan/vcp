@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>OCPP Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"/>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0b0e14;
+            --surface: #111620;
+            --surface2: #181f2e;
+            --border: #1e2840;
+            --border2: #2a3650;
+            --accent: #3b82f6;
+            --accent2: #60a5fa;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --mono: "IBM Plex Mono", monospace;
+            --sans: "IBM Plex Sans", sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        body {
+            display: grid;
+            grid-template-rows: 48px 1fr;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            color: var(--accent2);
+        }
+
+        .logo span {
+            color: var(--muted);
+        }
+
+        .badge {
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 3px 9px;
+            border-radius: 99px;
+            border: 1px solid var(--border2);
+            color: var(--muted);
+            margin-left: auto;
+        }
+
+        .badge.ok {
+            border-color: #166534;
+            color: var(--green);
+            background: #0f2b1a;
+        }
+
+        .badge.err {
+            border-color: #7f1d1d;
+            color: var(--red);
+            background: #2b0f0f;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .station-count {
+            font-family: var(--mono);
+            font-size: 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--muted);
+            padding: 2px 8px;
+            border-radius: 99px;
+        }
+
+        .station-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .station-card {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .station-card:hover {
+            background: var(--surface2);
+        }
+
+        .station-card.active {
+            background: #1a2744;
+            border-color: var(--accent);
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            flex-shrink: 0;
+        }
+
+        .station-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .station-id {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .station-ep {
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .btn-delete {
+            padding: 4px 8px;
+            border-radius: 5px;
+            border: 1px solid #7f1d1d;
+            background: #2b0f0f;
+            color: var(--red);
+            font-size: 11px;
+            cursor: pointer;
+            font-family: var(--mono);
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+
+        .btn-delete:hover {
+            background: #3f1414;
+        }
+
+        .add-form {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .add-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .field {
+            width: 100%;
+            padding: 8px 11px;
+            background: var(--bg);
+            border: 1px solid var(--border2);
+            border-radius: 7px;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 12px;
+            outline: none;
+        }
+
+        .field:focus {
+            border-color: var(--accent);
+        }
+
+        .field::placeholder {
+            color: var(--muted);
+        }
+
+        textarea.field {
+            resize: vertical;
+        }
+
+        .btn-add {
+            padding: 9px;
+            background: var(--accent);
+            border: none;
+            border-radius: 7px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-add:hover {
+            background: #2563eb;
+        }
+
+        .add-msg {
+            font-family: var(--mono);
+            font-size: 11px;
+        }
+
+        .msg-ok {
+            color: var(--green);
+        }
+
+        .msg-err {
+            color: var(--red);
+        }
+
+        .detail {
+            display: grid;
+            grid-template-rows: 1fr 220px;
+            overflow: hidden;
+        }
+
+        .workspace {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .panel-body {
+            padding: 16px;
+        }
+
+        .cmd-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .cmd-pill {
+            padding: 6px 13px;
+            border-radius: 99px;
+            border: 1px solid var(--border2);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 12px;
+            cursor: pointer;
+            font-family: var(--mono);
+            transition: border-color .15s, background .15s;
+        }
+
+        .cmd-pill:hover {
+            border-color: var(--accent);
+            background: #1a2744;
+        }
+
+        .cmd-pill.active {
+            border-color: var(--accent);
+            background: #1a2744;
+            color: var(--accent2);
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .send-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-send {
+            padding: 9px 22px;
+            background: var(--accent);
+            border: none;
+            border-radius: 7px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-send:hover {
+            background: #2563eb;
+        }
+
+        #send-status {
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .log-pane {
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .log-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .log-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .log-count {
+            font-family: var(--mono);
+            font-size: 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--muted);
+            padding: 1px 7px;
+            border-radius: 99px;
+        }
+
+        .log-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 16px;
+        }
+
+        .log-line {
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-ts {
+            color: #334155;
+        }
+
+        .l-info {
+            color: #38bdf8;
+        }
+
+        .l-warn {
+            color: var(--yellow);
+        }
+
+        .l-error {
+            color: var(--red);
+        }
+
+        .log-msg {
+            color: #94a3b8;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo">OCPP <span>/</span> Station Manager</div>
+    <div class="badge" id="health-badge">connecting…</div>
+</header>
+
+<div class="layout">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            Stations
+            <span class="station-count" id="station-count">0</span>
+        </div>
+        <div class="station-list" id="station-list"></div>
+        <div class="add-form">
+            <div class="add-title">Add Station</div>
+            <input id="new-id" class="field" placeholder="Charge Point ID"/>
+            <input id="new-endpoint" class="field" placeholder="Endpoint (optional)"/>
+            <input id="new-password" class="field" type="password" placeholder="Password (optional)"/>
+            <button class="btn-add" id="btn-add">+ Add Station</button>
+            <div class="add-msg" id="add-msg"></div>
+        </div>
+    </div>
+
+    <div class="detail">
+        <div class="workspace" id="workspace">
+            <div class="empty-state" id="empty-state">← Select a station</div>
+            <div id="detail-content" style="display:none;flex-direction:column;gap:16px;">
+                <div class="panel">
+                    <div class="panel-header">Quick Commands</div>
+                    <div class="panel-body">
+                        <div class="cmd-grid" id="cmd-grid"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">Send Message</div>
+                    <div class="panel-body" style="display:flex;flex-direction:column;gap:12px;">
+                        <div class="form-row">
+                            <label>Action</label>
+                            <input id="action" class="field" placeholder="e.g. Heartbeat"/>
+                        </div>
+                        <div class="form-row">
+                            <label>Payload (JSON)</label>
+                            <textarea id="payload" class="field" rows="5" spellcheck="false">{}</textarea>
+                        </div>
+                        <div class="send-row">
+                            <button class="btn-send" id="btn-send">Send ↗</button>
+                            <span id="send-status"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="log-pane">
+            <div class="log-toolbar">
+                <span class="log-title">Logs</span>
+                <span class="log-count" id="log-count">0</span>
+                <span id="log-station"
+                      style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:4px;"></span>
+            </div>
+            <div class="log-scroll" id="log-scroll"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const COMMANDS = [
+        {
+            label: "Boot",
+            action: "BootNotification",
+            payload: {chargePointVendor: "Solidstudio", chargePointModel: "VirtualCP"}
+        },
+        {
+            label: "Available",
+            action: "StatusNotification",
+            payload: {connectorId: 1, errorCode: "NoError", status: "Available"}
+        },
+        {
+            label: "Charging",
+            action: "StatusNotification",
+            payload: {connectorId: 1, errorCode: "NoError", status: "Charging"}
+        },
+        {label: "Heartbeat", action: "Heartbeat", payload: {}},
+        {label: "Authorize", action: "Authorize", payload: {idTag: "AABBCCDD"}},
+        {
+            label: "StartTx",
+            action: "StartTransaction",
+            payload: {connectorId: 1, idTag: "AABBCCDD", meterStart: 0, timestamp: new Date().toISOString()}
+        },
+        {
+            label: "StopTx",
+            action: "StopTransaction",
+            payload: {transactionId: 1, meterStop: 10, timestamp: new Date().toISOString()}
+        },
+    ];
+
+    let activeStation = null;
+    let lastLogLen = 0;
+    let activeCmd = null;
+
+    for (const cmd of COMMANDS) {
+        const pill = document.createElement("button");
+        pill.className = "cmd-pill";
+        pill.textContent = cmd.label;
+        pill.onclick = () => {
+            activeCmd?.classList.remove("active");
+            pill.classList.add("active");
+            activeCmd = pill;
+            document.getElementById("action").value = cmd.action;
+            document.getElementById("payload").value = JSON.stringify(cmd.payload, null, 2);
+        };
+        document.getElementById("cmd-grid").appendChild(pill);
+    }
+
+    function esc(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    async function renderStations() {
+        const stations = await fetch("/stations").then(r => r.json());
+        document.getElementById("station-count").textContent = stations.length;
+        const list = document.getElementById("station-list");
+        list.innerHTML = "";
+        for (const s of stations) {
+            const card = document.createElement("div");
+            card.className = "station-card" + (s.chargePointId === activeStation ? " active" : "");
+            card.innerHTML = `
+      <div class="dot"></div>
+      <div class="station-info">
+        <div class="station-id">${esc(s.chargePointId)}</div>
+        <div class="station-ep">${esc(s.endpoint)}</div>
+      </div>
+      <button class="btn-delete" data-id="${esc(s.chargePointId)}">✕</button>
+    `;
+            card.onclick = (e) => {
+                if (!e.target.classList.contains("btn-delete")) selectStation(s.chargePointId);
+            };
+            card.querySelector(".btn-delete").onclick = async (e) => {
+                e.stopPropagation();
+                await fetch("/stations/" + encodeURIComponent(s.chargePointId), {method: "DELETE"});
+                if (activeStation === s.chargePointId) deselectStation();
+                renderStations();
+            };
+            list.appendChild(card);
+        }
+    }
+
+    function selectStation(id) {
+        activeStation = id;
+        document.getElementById("empty-state").style.display = "none";
+        document.getElementById("detail-content").style.display = "flex";
+        document.getElementById("log-station").textContent = id;
+        lastLogLen = 0;
+        fetchLogs();
+        renderStations();
+    }
+
+    function deselectStation() {
+        activeStation = null;
+        document.getElementById("empty-state").style.display = "flex";
+        document.getElementById("detail-content").style.display = "none";
+        document.getElementById("log-scroll").innerHTML = "";
+        document.getElementById("log-count").textContent = "0";
+        document.getElementById("log-station").textContent = "";
+    }
+
+    document.getElementById("btn-add").onclick = async () => {
+        const id = document.getElementById("new-id").value.trim();
+        const ep = document.getElementById("new-endpoint").value.trim();
+        const pw = document.getElementById("new-password").value.trim();
+        const msg = document.getElementById("add-msg");
+        if (!id) {
+            msg.textContent = "ID required";
+            msg.className = "add-msg msg-err";
+            return;
+        }
+        msg.textContent = "Connecting…";
+        msg.className = "add-msg";
+        try {
+            const d = await fetch("/stations", {
+                method: "POST", headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({chargePointId: id, endpoint: ep || undefined, password: pw || undefined}),
+            }).then(r => r.json());
+            if (d.ok) {
+                msg.textContent = "✓ Added";
+                msg.className = "add-msg msg-ok";
+                ["new-id", "new-endpoint", "new-password"].forEach(id => document.getElementById(id).value = "");
+                renderStations();
+                setTimeout(() => msg.textContent = "", 3000);
+            } else {
+                msg.textContent = d.error;
+                msg.className = "add-msg msg-err";
+            }
+        } catch (e) {
+            msg.textContent = e.message;
+            msg.className = "add-msg msg-err";
+        }
+    };
+
+    document.getElementById("btn-send").onclick = async () => {
+        if (!activeStation) return;
+        const statusEl = document.getElementById("send-status");
+        const action = document.getElementById("action").value.trim();
+        const payloadRaw = document.getElementById("payload").value.trim();
+        if (!action) {
+            statusEl.textContent = "Action required";
+            statusEl.style.color = "var(--red)";
+            return;
+        }
+        let payload;
+        try {
+            payload = JSON.parse(payloadRaw || "{}");
+        } catch {
+            statusEl.textContent = "Invalid JSON";
+            statusEl.style.color = "var(--red)";
+            return;
+        }
+        try {
+            const r = await fetch("/stations/" + encodeURIComponent(activeStation) + "/execute", {
+                method: "POST", headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({action, payload}),
+            });
+            if (!r.ok) throw new Error(await r.text());
+            statusEl.textContent = "✓ Sent";
+            statusEl.style.color = "var(--green)";
+            setTimeout(() => statusEl.textContent = "", 3000);
+        } catch (e) {
+            statusEl.textContent = e.message;
+            statusEl.style.color = "var(--red)";
+        }
+    };
+
+    async function fetchLogs() {
+        if (!activeStation) return;
+        try {
+            const {logs = []} = await fetch("/stations/" + encodeURIComponent(activeStation) + "/logs").then(r => r.json());
+            document.getElementById("log-count").textContent = logs.length;
+            if (logs.length === lastLogLen) return;
+            lastLogLen = logs.length;
+            const scroll = document.getElementById("log-scroll");
+            const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 40;
+            scroll.innerHTML = logs.slice(-300).map(l => {
+                const lvl = (l.level || "info").toLowerCase();
+                const cls = lvl === "warn" ? "l-warn" : lvl === "error" ? "l-error" : "l-info";
+                const ts = (l.timestamp || "").replace("T", " ").slice(0, 19);
+                return `<div class="log-line"><span class="log-ts">${ts}</span> <span class="${cls}">[${lvl}]</span> <span class="log-msg">${esc(l.message)}</span></div>`;
+            }).join("");
+            if (atBottom) scroll.scrollTop = scroll.scrollHeight;
+        } catch {
+        }
+    }
+
+    async function fetchHealth() {
+        const badge = document.getElementById("health-badge");
+        try {
+            badge.textContent = await fetch("/health").then(r => r.text());
+            badge.className = "badge ok";
+        } catch {
+            badge.textContent = "offline";
+            badge.className = "badge err";
+        }
+    }
+
+    renderStations();
+    fetchHealth();
+    setInterval(renderStations, 5000);
+    setInterval(fetchHealth, 10000);
+    setInterval(fetchLogs, 3000);
+</script>
+</body>
+</html>
