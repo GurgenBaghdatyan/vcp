@@ -285,10 +285,40 @@
 
         /* ── Log pane ── */
         .log-pane     { background: var(--bg); border-top: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-        .log-toolbar  { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+        .log-toolbar  { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
         .log-label    { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); }
         .log-badge    { font-family: var(--mono); font-size: 10px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text2); padding: 1px 7px; border-radius: 99px; }
         .log-station-name { font-family: var(--mono); font-size: 10px; color: var(--accent); margin-left: 2px; }
+
+        .log-filters  { display: flex; gap: 3px; margin-left: 6px; }
+        .log-filter-btn {
+            padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border2);
+            background: transparent; color: var(--text3); font-family: var(--mono); font-size: 10px;
+            cursor: pointer; transition: background .12s, color .12s, border-color .12s;
+        }
+        .log-filter-btn:hover { border-color: var(--border2); background: var(--surface2); color: var(--text2); }
+        .log-filter-btn.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+        .log-filter-btn.f-out.active  { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+        .log-filter-btn.f-inc.active  { border-color: var(--green);  background: var(--green-dim);  color: var(--green); }
+        .log-filter-btn.f-warn.active { border-color: var(--yellow); background: color-mix(in srgb, var(--yellow) 12%, transparent); color: var(--yellow); }
+
+        .log-search-wrap { position: relative; margin-left: 2px; }
+        .log-search {
+            width: 140px; padding: 2px 22px 2px 8px;
+            background: var(--bg); border: 1px solid var(--border2); border-radius: 4px;
+            color: var(--text); font-family: var(--mono); font-size: 10px; outline: none;
+            transition: border-color .15s, width .2s;
+        }
+        .log-search:focus { border-color: var(--accent); width: 200px; }
+        .log-search::placeholder { color: var(--text3); }
+        .log-search-clear {
+            position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text3); font-size: 11px;
+            cursor: pointer; padding: 0 2px; line-height: 1; display: none;
+        }
+        .log-search-clear:hover { color: var(--text); }
+        .log-match { background: color-mix(in srgb, var(--yellow) 35%, transparent); border-radius: 2px; color: var(--text); }
+
         .log-collapse-btn {
             margin-left: auto;
             width: 22px; height: 22px;
@@ -395,6 +425,16 @@
                 <span class="log-label">Logs</span>
                 <span class="log-badge" id="log-count">0</span>
                 <span class="log-station-name" id="log-station"></span>
+                <div class="log-filters">
+                    <button class="log-filter-btn active" data-filter="all">All</button>
+                    <button class="log-filter-btn f-out"  data-filter="out">↗ Out</button>
+                    <button class="log-filter-btn f-inc"  data-filter="inc">↙ In</button>
+                    <button class="log-filter-btn f-warn" data-filter="warn">⚠ Warn</button>
+                </div>
+                <div class="log-search-wrap">
+                    <input class="log-search" id="log-search" placeholder="Search…" autocomplete="off" spellcheck="false"/>
+                    <button class="log-search-clear" id="log-search-clear">✕</button>
+                </div>
                 <button class="log-collapse-btn" id="log-collapse-btn" title="Collapse / Expand">╵</button>
             </div>
             <div class="log-scroll" id="log-scroll"></div>
@@ -524,6 +564,9 @@
         document.getElementById("log-scroll").innerHTML         = "";
         document.getElementById("log-count").textContent        = "0";
         document.getElementById("log-station").textContent      = "";
+        logCache = []; lastLogLen = 0;
+        searchInput.value = ""; logSearch = "";
+        searchClear.style.display = "none";
     }
 
     document.getElementById("btn-add").onclick = async () => {
@@ -572,6 +615,84 @@
         if (e.key === "Enter") document.getElementById("btn-send").click();
     });
 
+    // ── Log filter ─────────────────────────────────────────────────────────────
+    let activeFilter = "all";
+    let logCache = [];
+    let logSearch = "";
+
+    document.querySelectorAll(".log-filter-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".log-filter-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            activeFilter = btn.dataset.filter;
+            renderLogs();
+        });
+    });
+
+    const searchInput = document.getElementById("log-search");
+    const searchClear = document.getElementById("log-search-clear");
+
+    searchInput.addEventListener("input", () => {
+        logSearch = searchInput.value;
+        searchClear.style.display = logSearch ? "block" : "none";
+        renderLogs();
+    });
+    searchClear.addEventListener("click", () => {
+        searchInput.value = "";
+        logSearch = "";
+        searchClear.style.display = "none";
+        searchInput.focus();
+        renderLogs();
+    });
+    // Ctrl+F focuses search
+    document.addEventListener("keydown", e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "f" && activeStation) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+        if (e.key === "Escape" && document.activeElement === searchInput) {
+            searchInput.blur();
+        }
+    });
+
+    function highlight(text, query) {
+        if (!query) return esc(text);
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return esc(text).replace(
+            new RegExp(esc(query).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
+            m => `<mark class="log-match">${m}</mark>`
+        );
+    }
+
+    function applyFilter(logs) {
+        if (activeFilter === "out")  return logs.filter(l => (l.message || "").includes("➡️"));
+        if (activeFilter === "inc")  return logs.filter(l => (l.message || "").includes("⬅️"));
+        if (activeFilter === "warn") return logs.filter(l => ["warn","error"].includes((l.level || "").toLowerCase()));
+        return logs;
+    }
+
+    function renderLogs() {
+        const scroll   = document.getElementById("log-scroll");
+        const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 40;
+        let filtered = applyFilter(logCache);
+        if (logSearch) {
+            const q = logSearch.toLowerCase();
+            filtered = filtered.filter(l => (l.message || "").toLowerCase().includes(q));
+        }
+        filtered = filtered.slice(-300);
+        scroll.innerHTML = filtered.map(l => {
+            const lvl = (l.level || "info").toLowerCase();
+            const cls = lvl === "warn" ? "l-warn" : lvl === "error" ? "l-error" : "l-info";
+            const ts  = (l.timestamp || "").replace("T"," ").slice(0,19);
+            const msg = l.message || "";
+            const dir = msg.includes("➡️") ? "out" : msg.includes("⬅️") ? "inc" : "";
+            const msgHtml = logSearch ? highlight(msg, logSearch) : esc(msg);
+            return `<div class="log-line ${dir}"><span class="log-ts">${ts}</span><span class="${cls}">${lvl.slice(0,4)}</span><span class="log-msg">${msgHtml}</span></div>`;
+        }).join("");
+        if (atBottom) scroll.scrollTop = scroll.scrollHeight;
+    }
+
     async function fetchLogs() {
         if (!activeStation) return;
         try {
@@ -579,17 +700,8 @@
             document.getElementById("log-count").textContent = logs.length;
             if (logs.length === lastLogLen) return;
             lastLogLen = logs.length;
-            const scroll   = document.getElementById("log-scroll");
-            const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 40;
-            scroll.innerHTML = logs.slice(-300).map(l => {
-                const lvl = (l.level || "info").toLowerCase();
-                const cls = lvl === "warn" ? "l-warn" : lvl === "error" ? "l-error" : "l-info";
-                const ts  = (l.timestamp || "").replace("T"," ").slice(0,19);
-                const msg = l.message || "";
-                const dir = msg.includes("➡️") ? "out" : msg.includes("⬅️") ? "inc" : "";
-                return `<div class="log-line ${dir}"><span class="log-ts">${ts}</span><span class="${cls}">${lvl.slice(0,4)}</span><span class="log-msg">${esc(msg)}</span></div>`;
-            }).join("");
-            if (atBottom) scroll.scrollTop = scroll.scrollHeight;
+            logCache = logs;
+            renderLogs();
         } catch {}
     }
 
