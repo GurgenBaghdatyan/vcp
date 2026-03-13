@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="utf-8"/>
-    <title>OCPP Manager</title>
+    <title>OCPP Station Manager</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"/>
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600&display=swap"/>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -13,86 +13,312 @@
             padding: 0;
         }
 
-        :root {
-            --bg: #0b0e14;
-            --surface: #111620;
-            --surface2: #181f2e;
-            --border: #1e2840;
-            --border2: #2a3650;
-            --accent: #3b82f6;
-            --accent2: #60a5fa;
-            --green: #22c55e;
-            --red: #ef4444;
-            --yellow: #f59e0b;
-            --text: #e2e8f0;
-            --muted: #64748b;
-            --mono: "IBM Plex Mono", monospace;
-            --sans: "IBM Plex Sans", sans-serif;
+        /* ══════════════════════════════════════════════
+           THEMES
+        ══════════════════════════════════════════════ */
+
+        [data-theme="dark"] {
+            --bg: #080a0f;
+            --surface: #0e1117;
+            --surface2: #131720;
+            --surface3: #1a2030;
+            --border: #1c2333;
+            --border2: #26334d;
+            --accent: #4f8ef7;
+            --accent-dim: #1e3a6e;
+            --green: #3dd68c;
+            --green-dim: #0f3320;
+            --red: #f75f5f;
+            --red-dim: #3a1010;
+            --yellow: #f5a623;
+            --text: #cdd6f4;
+            --text2: #7b8db0;
+            --text3: #3d4f6e;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .5);
         }
+
+        [data-theme="light"] {
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --surface2: #f0f2f8;
+            --surface3: #e8ecf5;
+            --border: #dde3ef;
+            --border2: #c8d0e4;
+            --accent: #2563eb;
+            --accent-dim: #dbeafe;
+            --green: #16a34a;
+            --green-dim: #dcfce7;
+            --red: #dc2626;
+            --red-dim: #fee2e2;
+            --yellow: #d97706;
+            --text: #1e293b;
+            --text2: #475569;
+            --text3: #94a3b8;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .08);
+        }
+
+        [data-theme="dimmed"] {
+            --bg: #1a1d27;
+            --surface: #21252f;
+            --surface2: #272c38;
+            --surface3: #2e3444;
+            --border: #313848;
+            --border2: #404c62;
+            --accent: #7c9ef5;
+            --accent-dim: #2a3a62;
+            --green: #5bc994;
+            --green-dim: #1a3d2e;
+            --red: #f08080;
+            --red-dim: #3d1a1a;
+            --yellow: #f0b84a;
+            --text: #dce4f5;
+            --text2: #8a9ab8;
+            --text3: #4e5e7a;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .3);
+        }
+
+        [data-theme="solarized"] {
+            --bg: #fdf6e3;
+            --surface: #eee8d5;
+            --surface2: #e6dfcc;
+            --surface3: #ddd8c4;
+            --border: #cdc8b2;
+            --border2: #b8b3a0;
+            --accent: #268bd2;
+            --accent-dim: #d4eaf7;
+            --green: #859900;
+            --green-dim: #eef2cc;
+            --red: #dc322f;
+            --red-dim: #fde0e0;
+            --yellow: #b58900;
+            --text: #073642;
+            --text2: #586e75;
+            --text3: #93a1a1;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .1);
+        }
+
+        /* ══════════════════════════════════════════════
+           BASE
+        ══════════════════════════════════════════════ */
 
         html, body {
             height: 100%;
             font-family: var(--sans);
             background: var(--bg);
             color: var(--text);
+            transition: background .2s, color .2s;
         }
 
         body {
             display: grid;
-            grid-template-rows: 48px 1fr;
+            grid-template-rows: 52px 1fr;
             overflow: hidden;
+            --mono: "JetBrains Mono", monospace;
+            --sans: "Geist", sans-serif;
+            --radius: 10px;
+            --radius-sm: 6px;
         }
 
+        /* ── Header ── */
         header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 0 24px;
+            gap: 16px;
+            padding: 0 20px;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-dim), transparent 60%);
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .logo-text {
             font-family: var(--mono);
             font-size: 13px;
-            font-weight: 600;
-            letter-spacing: .04em;
-            color: var(--accent2);
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: .02em;
         }
 
-        .logo span {
-            color: var(--muted);
+        .logo-text span {
+            color: var(--text3);
+            font-weight: 400;
         }
 
-        .badge {
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ── Theme switcher ── */
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .theme-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid var(--border2);
+            cursor: pointer;
+            position: relative;
+            transition: border-color .15s, transform .15s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .theme-btn:hover {
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .theme-btn.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        /* Color preview swatches inside each button */
+        .theme-btn::before, .theme-btn::after {
+            content: '';
+            position: absolute;
+        }
+
+        /* dark */
+        .tb-dark {
+            background: #080a0f;
+        }
+
+        .tb-dark::before {
+            inset: 0 50% 0 0;
+            background: #0e1117;
+        }
+
+        .tb-dark::after {
+            inset: 25% 25% 25% 55%;
+            background: #4f8ef7;
+            border-radius: 2px;
+        }
+
+        /* light */
+        .tb-light {
+            background: #f4f6fb;
+        }
+
+        .tb-light::before {
+            inset: 0 50% 0 0;
+            background: #ffffff;
+        }
+
+        .tb-light::after {
+            inset: 25% 25% 25% 55%;
+            background: #2563eb;
+            border-radius: 2px;
+        }
+
+        /* dimmed */
+        .tb-dimmed {
+            background: #1a1d27;
+        }
+
+        .tb-dimmed::before {
+            inset: 0 50% 0 0;
+            background: #21252f;
+        }
+
+        .tb-dimmed::after {
+            inset: 25% 25% 25% 55%;
+            background: #7c9ef5;
+            border-radius: 2px;
+        }
+
+        /* solarized */
+        .tb-solarized {
+            background: #fdf6e3;
+        }
+
+        .tb-solarized::before {
+            inset: 0 50% 0 0;
+            background: #eee8d5;
+        }
+
+        .tb-solarized::after {
+            inset: 25% 25% 25% 55%;
+            background: #268bd2;
+            border-radius: 2px;
+        }
+
+        .theme-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--text3);
+            white-space: nowrap;
+        }
+
+        /* ── Status ── */
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text3);
+            transition: background .3s;
+        }
+
+        .status-dot.ok {
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+        }
+
+        .status-dot.err {
+            background: var(--red);
+        }
+
+        .status-text {
             font-family: var(--mono);
             font-size: 11px;
-            padding: 3px 9px;
-            border-radius: 99px;
-            border: 1px solid var(--border2);
-            color: var(--muted);
-            margin-left: auto;
+            color: var(--text2);
         }
 
-        .badge.ok {
-            border-color: #166534;
-            color: var(--green);
-            background: #0f2b1a;
-        }
-
-        .badge.err {
-            border-color: #7f1d1d;
-            color: var(--red);
-            background: #2b0f0f;
-        }
-
+        /* ── Layout ── */
         .layout {
             display: grid;
-            grid-template-columns: 340px 1fr;
-            height: 100%;
+            grid-template-columns: 300px 1fr;
             overflow: hidden;
+            height: 100%;
         }
 
+        /* ── Sidebar ── */
         .sidebar {
             background: var(--surface);
             border-right: 1px solid var(--border);
@@ -101,25 +327,28 @@
             overflow: hidden;
         }
 
-        .sidebar-header {
-            padding: 14px 16px 10px;
+        .sidebar-section {
+            padding: 14px 14px 10px;
             border-bottom: 1px solid var(--border);
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--muted);
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        .station-count {
+        .section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--text3);
+        }
+
+        .count-pill {
             font-family: var(--mono);
             font-size: 10px;
-            background: var(--surface2);
+            background: var(--surface3);
             border: 1px solid var(--border2);
-            color: var(--muted);
+            color: var(--text2);
             padding: 2px 8px;
             border-radius: 99px;
         }
@@ -127,37 +356,40 @@
         .station-list {
             flex: 1;
             overflow-y: auto;
-            padding: 8px;
+            padding: 6px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
 
         .station-card {
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
+            padding: 9px 11px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: background .15s, border-color .15s;
+            transition: background .12s, border-color .12s;
             display: flex;
             align-items: center;
             gap: 10px;
+            animation: fadeIn .15s ease;
         }
 
         .station-card:hover {
             background: var(--surface2);
+            border-color: var(--border);
         }
 
         .station-card.active {
-            background: #1a2744;
+            background: var(--accent-dim);
             border-color: var(--accent);
         }
 
-        .dot {
-            width: 7px;
-            height: 7px;
+        .station-dot {
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: var(--green);
+            box-shadow: 0 0 5px var(--green);
             flex-shrink: 0;
         }
 
@@ -168,8 +400,8 @@
 
         .station-id {
             font-family: var(--mono);
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -177,56 +409,55 @@
 
         .station-ep {
             font-size: 11px;
-            color: var(--muted);
+            color: var(--text2);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin-top: 2px;
+            font-family: var(--mono);
         }
 
-        .btn-delete {
-            padding: 4px 8px;
+        .btn-remove {
+            width: 22px;
+            height: 22px;
             border-radius: 5px;
-            border: 1px solid #7f1d1d;
-            background: #2b0f0f;
-            color: var(--red);
-            font-size: 11px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text3);
+            font-size: 12px;
             cursor: pointer;
-            font-family: var(--mono);
-            transition: background .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .12s, color .12s, border-color .12s;
             flex-shrink: 0;
         }
 
-        .btn-delete:hover {
-            background: #3f1414;
+        .btn-remove:hover {
+            background: var(--red-dim);
+            border-color: var(--red);
+            color: var(--red);
         }
 
         .add-form {
-            padding: 14px 16px;
+            padding: 12px 14px;
             border-top: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 8px;
-        }
-
-        .add-title {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--muted);
+            gap: 6px;
         }
 
         .field {
             width: 100%;
-            padding: 8px 11px;
+            padding: 7px 10px;
             background: var(--bg);
             border: 1px solid var(--border2);
-            border-radius: 7px;
+            border-radius: var(--radius-sm);
             color: var(--text);
             font-family: var(--mono);
             font-size: 12px;
             outline: none;
+            transition: border-color .15s, background .2s, color .2s;
         }
 
         .field:focus {
@@ -234,32 +465,34 @@
         }
 
         .field::placeholder {
-            color: var(--muted);
+            color: var(--text3);
         }
 
         textarea.field {
             resize: vertical;
         }
 
-        .btn-add {
-            padding: 9px;
+        .btn-primary {
+            padding: 8px;
             background: var(--accent);
             border: none;
-            border-radius: 7px;
+            border-radius: var(--radius-sm);
             color: #fff;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 12px;
+            font-family: var(--sans);
             cursor: pointer;
-            transition: background .15s;
+            transition: opacity .15s;
         }
 
-        .btn-add:hover {
-            background: #2563eb;
+        .btn-primary:hover {
+            opacity: .85;
         }
 
-        .add-msg {
+        .form-msg {
             font-family: var(--mono);
             font-size: 11px;
+            min-height: 14px;
         }
 
         .msg-ok {
@@ -270,6 +503,7 @@
             color: var(--red);
         }
 
+        /* ── Detail ── */
         .detail {
             display: grid;
             grid-template-rows: 1fr 220px;
@@ -277,116 +511,172 @@
         }
 
         .workspace {
-            padding: 20px;
+            padding: 16px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
+        }
+
+        /* ── Log resize handle ── */
+        .log-pane {
+            position: relative;
+        }
+
+        .log-resize-handle {
+            position: absolute;
+            top: -4px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: ns-resize;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .log-resize-handle::after {
+            content: '';
+            width: 32px;
+            height: 3px;
+            background: var(--border2);
+            border-radius: 99px;
+            transition: background .15s, width .15s;
+        }
+
+        .log-resize-handle:hover::after,
+        .log-resize-handle.dragging::after {
+            background: var(--accent);
+            width: 48px;
         }
 
         .empty-state {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: var(--muted);
+            gap: 10px;
+            color: var(--text3);
+        }
+
+        .empty-icon {
+            font-size: 28px;
+            opacity: .4;
+        }
+
+        .empty-label {
             font-size: 13px;
         }
 
         .panel {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: var(--radius);
             overflow: hidden;
         }
 
         .panel-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
+            gap: 8px;
+            padding: 9px 14px;
             border-bottom: 1px solid var(--border);
-            font-size: 11px;
+        }
+
+        .panel-title {
+            font-size: 10px;
             font-weight: 600;
-            letter-spacing: .06em;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: var(--text3);
         }
 
         .panel-body {
-            padding: 16px;
+            padding: 14px;
         }
 
         .cmd-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
         }
 
         .cmd-pill {
-            padding: 6px 13px;
+            padding: 5px 12px;
             border-radius: 99px;
             border: 1px solid var(--border2);
             background: var(--surface2);
-            color: var(--text);
-            font-size: 12px;
+            color: var(--text2);
+            font-size: 11px;
             cursor: pointer;
             font-family: var(--mono);
-            transition: border-color .15s, background .15s;
+            font-weight: 500;
+            transition: border-color .12s, background .12s, color .12s;
         }
 
         .cmd-pill:hover {
             border-color: var(--accent);
-            background: #1a2744;
+            background: var(--accent-dim);
+            color: var(--text);
         }
 
         .cmd-pill.active {
             border-color: var(--accent);
-            background: #1a2744;
-            color: var(--accent2);
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .send-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .form-row {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
         }
 
-        label {
+        .form-label {
             font-size: 10px;
             font-weight: 600;
-            letter-spacing: .08em;
+            letter-spacing: .09em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: var(--text3);
         }
 
-        .send-row {
+        .send-footer {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
         .btn-send {
-            padding: 9px 22px;
+            padding: 8px 20px;
             background: var(--accent);
             border: none;
-            border-radius: 7px;
+            border-radius: var(--radius-sm);
             color: #fff;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 12px;
+            font-family: var(--sans);
             cursor: pointer;
-            transition: background .15s;
+            transition: opacity .15s;
         }
 
         .btn-send:hover {
-            background: #2563eb;
+            opacity: .85;
         }
 
-        #send-status {
+        .send-status {
             font-family: var(--mono);
-            font-size: 12px;
+            font-size: 11px;
         }
 
+        /* ── Log pane ── */
         .log-pane {
             background: var(--bg);
             border-top: 1px solid var(--border);
@@ -399,131 +689,217 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 16px;
+            padding: 7px 14px;
             border-bottom: 1px solid var(--border);
+            background: var(--surface);
         }
 
-        .log-title {
+        .log-label {
             font-family: var(--mono);
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .06em;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: var(--text3);
         }
 
-        .log-count {
+        .log-badge {
             font-family: var(--mono);
             font-size: 10px;
             background: var(--surface2);
             border: 1px solid var(--border2);
-            color: var(--muted);
+            color: var(--text2);
             padding: 1px 7px;
             border-radius: 99px;
+        }
+
+        .log-station-name {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--accent);
+            margin-left: 2px;
+        }
+
+        .log-collapse-btn {
+            margin-left: auto;
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            border: 1px solid var(--border2);
+            background: transparent;
+            color: var(--text3);
+            font-size: 13px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .12s, color .12s, border-color .12s;
+            font-family: var(--mono);
+        }
+
+        .log-collapse-btn:hover {
+            background: var(--surface2);
+            border-color: var(--accent);
+            color: var(--accent);
         }
 
         .log-scroll {
             flex: 1;
             overflow-y: auto;
-            padding: 8px 16px;
+            padding: 6px 14px;
         }
 
         .log-line {
             font-family: var(--mono);
-            font-size: 12px;
-            line-height: 1.7;
+            font-size: 11px;
+            line-height: 1.85;
             white-space: pre-wrap;
             word-break: break-all;
+            display: flex;
+            gap: 8px;
         }
 
         .log-ts {
-            color: #334155;
+            color: var(--text3);
+            flex-shrink: 0;
         }
 
         .l-info {
-            color: #38bdf8;
+            color: var(--accent);
+            flex-shrink: 0;
         }
 
         .l-warn {
             color: var(--yellow);
+            flex-shrink: 0;
         }
 
         .l-error {
             color: var(--red);
+            flex-shrink: 0;
         }
 
         .log-msg {
-            color: #94a3b8;
+            color: var(--text2);
+        }
+
+        .log-line.out .log-msg {
+            color: var(--accent);
+        }
+
+        .log-line.inc .log-msg {
+            color: var(--green);
         }
 
         ::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
             background: var(--border2);
-            border-radius: 3px;
+            border-radius: 99px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
         }
     </style>
 </head>
 <body>
+
 <header>
-    <div class="logo">OCPP <span>/</span> Station Manager</div>
-    <div class="badge" id="health-badge">connecting…</div>
+    <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">OCPP <span>/</span> Station Manager</div>
+    </div>
+    <div class="header-right">
+        <!-- Theme switcher -->
+        <span class="theme-label">Theme</span>
+        <div class="theme-switcher">
+            <button class="theme-btn tb-dark" title="Dark" data-theme="dark"></button>
+            <button class="theme-btn tb-dimmed" title="Dimmed" data-theme="dimmed"></button>
+            <button class="theme-btn tb-light" title="Light" data-theme="light"></button>
+            <button class="theme-btn tb-solarized" title="Solarized" data-theme="solarized"></button>
+        </div>
+        <!-- Status -->
+        <div class="status-dot" id="status-dot"></div>
+        <div class="status-text" id="status-text">connecting…</div>
+    </div>
 </header>
 
 <div class="layout">
     <div class="sidebar">
-        <div class="sidebar-header">
-            Stations
-            <span class="station-count" id="station-count">0</span>
+        <div class="sidebar-section">
+            <span class="section-label">Stations</span>
+            <span class="count-pill" id="station-count">0</span>
         </div>
         <div class="station-list" id="station-list"></div>
         <div class="add-form">
-            <div class="add-title">Add Station</div>
+            <div class="section-label" style="padding-bottom:4px;">Add Station</div>
             <input id="new-id" class="field" placeholder="Charge Point ID"/>
             <input id="new-endpoint" class="field" placeholder="Endpoint (optional)"/>
             <input id="new-password" class="field" type="password" placeholder="Password (optional)"/>
-            <button class="btn-add" id="btn-add">+ Add Station</button>
-            <div class="add-msg" id="add-msg"></div>
+            <button class="btn-primary" id="btn-add">+ Connect Station</button>
+            <div class="form-msg" id="add-msg"></div>
         </div>
     </div>
 
     <div class="detail">
         <div class="workspace" id="workspace">
-            <div class="empty-state" id="empty-state">← Select a station</div>
-            <div id="detail-content" style="display:none;flex-direction:column;gap:16px;">
+            <div class="empty-state" id="empty-state">
+                <div class="empty-icon">⚡</div>
+                <div class="empty-label">Select a station to inspect</div>
+            </div>
+            <div id="detail-content" style="display:none;flex-direction:column;gap:12px;">
                 <div class="panel">
-                    <div class="panel-header">Quick Commands</div>
+                    <div class="panel-header"><span class="panel-title">Quick Commands</span></div>
                     <div class="panel-body">
                         <div class="cmd-grid" id="cmd-grid"></div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header">Send Message</div>
-                    <div class="panel-body" style="display:flex;flex-direction:column;gap:12px;">
-                        <div class="form-row">
-                            <label>Action</label>
-                            <input id="action" class="field" placeholder="e.g. Heartbeat"/>
-                        </div>
-                        <div class="form-row">
-                            <label>Payload (JSON)</label>
-                            <textarea id="payload" class="field" rows="5" spellcheck="false">{}</textarea>
-                        </div>
-                        <div class="send-row">
-                            <button class="btn-send" id="btn-send">Send ↗</button>
-                            <span id="send-status"></span>
+                    <div class="panel-header"><span class="panel-title">Send Message</span></div>
+                    <div class="panel-body">
+                        <div class="send-form">
+                            <div class="form-row">
+                                <label class="form-label">Action</label>
+                                <input id="action" class="field" placeholder="e.g. Heartbeat"/>
+                            </div>
+                            <div class="form-row">
+                                <label class="form-label">Payload <span
+                                        style="text-transform:none;letter-spacing:0;font-weight:400;">(JSON)</span></label>
+                                <textarea id="payload" class="field" rows="5" spellcheck="false">{}</textarea>
+                            </div>
+                            <div class="send-footer">
+                                <button class="btn-send" id="btn-send">Send ↗</button>
+                                <span class="send-status" id="send-status"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="log-pane">
+
+        <div class="log-pane" id="log-pane">
+            <div class="log-resize-handle" id="log-resize-handle"></div>
             <div class="log-toolbar">
-                <span class="log-title">Logs</span>
-                <span class="log-count" id="log-count">0</span>
-                <span id="log-station"
-                      style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:4px;"></span>
+                <span class="log-label">Logs</span>
+                <span class="log-badge" id="log-count">0</span>
+                <span class="log-station-name" id="log-station"></span>
+                <button class="log-collapse-btn" id="log-collapse-btn" title="Collapse / Expand">╵</button>
             </div>
             <div class="log-scroll" id="log-scroll"></div>
         </div>
@@ -531,6 +907,26 @@
 </div>
 
 <script>
+    // ── Theme ──────────────────────────────────────────────────────────────────
+    const THEMES = ["dark", "dimmed", "light", "solarized"];
+    const root = document.documentElement;
+
+    function applyTheme(t) {
+        if (!THEMES.includes(t)) t = "dark";
+        root.setAttribute("data-theme", t);
+        localStorage.setItem("ocpp-theme", t);
+        document.querySelectorAll(".theme-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.theme === t);
+        });
+    }
+
+    document.querySelectorAll(".theme-btn").forEach(btn => {
+        btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+    });
+
+    applyTheme(localStorage.getItem("ocpp-theme") || "dark");
+
+    // ── Commands ───────────────────────────────────────────────────────────────
     const COMMANDS = [
         {
             label: "Boot",
@@ -543,9 +939,19 @@
             payload: {connectorId: 1, errorCode: "NoError", status: "Available"}
         },
         {
+            label: "Preparing",
+            action: "StatusNotification",
+            payload: {connectorId: 1, errorCode: "NoError", status: "Preparing"}
+        },
+        {
             label: "Charging",
             action: "StatusNotification",
             payload: {connectorId: 1, errorCode: "NoError", status: "Charging"}
+        },
+        {
+            label: "Faulted",
+            action: "StatusNotification",
+            payload: {connectorId: 1, errorCode: "InternalError", status: "Faulted"}
         },
         {label: "Heartbeat", action: "Heartbeat", payload: {}},
         {label: "Authorize", action: "Authorize", payload: {idTag: "AABBCCDD"}},
@@ -557,13 +963,17 @@
         {
             label: "StopTx",
             action: "StopTransaction",
-            payload: {transactionId: 1, meterStop: 10, timestamp: new Date().toISOString(), reason: "Remote", idTag: "IdTag"}
+            payload: {
+                transactionId: 1,
+                meterStop: 100,
+                timestamp: new Date().toISOString(),
+                reason: "Remote",
+                idTag: "AABBCCDD"
+            }
         },
     ];
 
-    let activeStation = null;
-    let lastLogLen = 0;
-    let activeCmd = null;
+    let activeStation = null, lastLogLen = 0, activeCmd = null;
 
     for (const cmd of COMMANDS) {
         const pill = document.createElement("button");
@@ -583,8 +993,19 @@
         return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
+    function setMsg(el, text, ok) {
+        el.textContent = text;
+        el.className = "form-msg" + (ok === true ? " msg-ok" : ok === false ? " msg-err" : "");
+    }
+
+    // ── Stations ───────────────────────────────────────────────────────────────
     async function renderStations() {
-        const stations = await fetch("/stations").then(r => r.json());
+        let stations = [];
+        try {
+            stations = await fetch("/stations").then(r => r.json());
+        } catch {
+            return;
+        }
         document.getElementById("station-count").textContent = stations.length;
         const list = document.getElementById("station-list");
         list.innerHTML = "";
@@ -592,17 +1013,16 @@
             const card = document.createElement("div");
             card.className = "station-card" + (s.chargePointId === activeStation ? " active" : "");
             card.innerHTML = `
-      <div class="dot"></div>
-      <div class="station-info">
-        <div class="station-id">${esc(s.chargePointId)}</div>
-        <div class="station-ep">${esc(s.endpoint)}</div>
-      </div>
-      <button class="btn-delete" data-id="${esc(s.chargePointId)}">✕</button>
-    `;
-            card.onclick = (e) => {
-                if (!e.target.classList.contains("btn-delete")) selectStation(s.chargePointId);
+                <div class="station-dot"></div>
+                <div class="station-info">
+                    <div class="station-id">${esc(s.chargePointId)}</div>
+                    <div class="station-ep">${esc(s.endpoint)}</div>
+                </div>
+                <button class="btn-remove" title="Disconnect">✕</button>`;
+            card.onclick = e => {
+                if (!e.target.classList.contains("btn-remove")) selectStation(s.chargePointId);
             };
-            card.querySelector(".btn-delete").onclick = async (e) => {
+            card.querySelector(".btn-remove").onclick = async e => {
                 e.stopPropagation();
                 await fetch("/stations/" + encodeURIComponent(s.chargePointId), {method: "DELETE"});
                 if (activeStation === s.chargePointId) deselectStation();
@@ -637,30 +1057,25 @@
         const pw = document.getElementById("new-password").value.trim();
         const msg = document.getElementById("add-msg");
         if (!id) {
-            msg.textContent = "ID required";
-            msg.className = "add-msg msg-err";
+            setMsg(msg, "Charge Point ID required", false);
             return;
         }
-        msg.textContent = "Connecting…";
-        msg.className = "add-msg";
+        setMsg(msg, "Connecting…", null);
         try {
             const d = await fetch("/stations", {
                 method: "POST", headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({chargePointId: id, endpoint: ep || undefined, password: pw || undefined}),
             }).then(r => r.json());
             if (d.ok) {
-                msg.textContent = "✓ Added";
-                msg.className = "add-msg msg-ok";
-                ["new-id", "new-endpoint", "new-password"].forEach(id => document.getElementById(id).value = "");
+                setMsg(msg, "✓ Connected", true);
+                ["new-id", "new-endpoint", "new-password"].forEach(x => document.getElementById(x).value = "");
                 renderStations();
                 setTimeout(() => msg.textContent = "", 3000);
             } else {
-                msg.textContent = d.error;
-                msg.className = "add-msg msg-err";
+                setMsg(msg, d.error || "Failed", false);
             }
         } catch (e) {
-            msg.textContent = e.message;
-            msg.className = "add-msg msg-err";
+            setMsg(msg, e.message, false);
         }
     };
 
@@ -668,7 +1083,7 @@
         if (!activeStation) return;
         const statusEl = document.getElementById("send-status");
         const action = document.getElementById("action").value.trim();
-        const payloadRaw = document.getElementById("payload").value.trim();
+        const raw = document.getElementById("payload").value.trim();
         if (!action) {
             statusEl.textContent = "Action required";
             statusEl.style.color = "var(--red)";
@@ -676,7 +1091,7 @@
         }
         let payload;
         try {
-            payload = JSON.parse(payloadRaw || "{}");
+            payload = JSON.parse(raw || "{}");
         } catch {
             statusEl.textContent = "Invalid JSON";
             statusEl.style.color = "var(--red)";
@@ -690,13 +1105,18 @@
             if (!r.ok) throw new Error(await r.text());
             statusEl.textContent = "✓ Sent";
             statusEl.style.color = "var(--green)";
-            setTimeout(() => statusEl.textContent = "", 3000);
+            setTimeout(() => statusEl.textContent = "", 2500);
         } catch (e) {
             statusEl.textContent = e.message;
             statusEl.style.color = "var(--red)";
         }
     };
 
+    document.getElementById("action").addEventListener("keydown", e => {
+        if (e.key === "Enter") document.getElementById("btn-send").click();
+    });
+
+    // ── Logs ───────────────────────────────────────────────────────────────────
     async function fetchLogs() {
         if (!activeStation) return;
         try {
@@ -710,29 +1130,111 @@
                 const lvl = (l.level || "info").toLowerCase();
                 const cls = lvl === "warn" ? "l-warn" : lvl === "error" ? "l-error" : "l-info";
                 const ts = (l.timestamp || "").replace("T", " ").slice(0, 19);
-                return `<div class="log-line"><span class="log-ts">${ts}</span> <span class="${cls}">[${lvl}]</span> <span class="log-msg">${esc(l.message)}</span></div>`;
+                const msg = l.message || "";
+                const dir = msg.includes("➡️") ? "out" : msg.includes("⬅️") ? "inc" : "";
+                return `<div class="log-line ${dir}"><span class="log-ts">${ts}</span><span class="${cls}">${lvl.slice(0, 4)}</span><span class="log-msg">${esc(msg)}</span></div>`;
             }).join("");
             if (atBottom) scroll.scrollTop = scroll.scrollHeight;
         } catch {
         }
     }
 
+    // ── Health ─────────────────────────────────────────────────────────────────
     async function fetchHealth() {
-        const badge = document.getElementById("health-badge");
+        const dot = document.getElementById("status-dot");
+        const text = document.getElementById("status-text");
         try {
-            badge.textContent = await fetch("/health").then(r => r.text());
-            badge.className = "badge ok";
+            await fetch("/health");
+            dot.className = "status-dot ok";
+            text.textContent = "online";
         } catch {
-            badge.textContent = "offline";
-            badge.className = "badge err";
+            dot.className = "status-dot err";
+            text.textContent = "offline";
         }
     }
+
+    // ── Log pane resize & collapse ─────────────────────────────────────────────
+    const detail = document.querySelector(".detail");
+    const logPane = document.getElementById("log-pane");
+    const handle = document.getElementById("log-resize-handle");
+    const collapseBtn = document.getElementById("log-collapse-btn");
+
+    const MIN_LOG_H = 36;   // collapsed — just toolbar
+    const MAX_LOG_H = 600;
+    const DEF_LOG_H = 220;
+    const TOOLBAR_H = 36;
+
+    let logH = parseInt(localStorage.getItem("ocpp-log-h") || DEF_LOG_H);
+    let collapsed = localStorage.getItem("ocpp-log-collapsed") === "1";
+
+    function setLogHeight(h, save = true) {
+        logH = Math.max(MIN_LOG_H, Math.min(MAX_LOG_H, h));
+        const rows = collapsed ? `1fr ${TOOLBAR_H}px` : `1fr ${logH}px`;
+        detail.style.gridTemplateRows = rows;
+        if (save) localStorage.setItem("ocpp-log-h", logH);
+        syncCollapseBtn();
+    }
+
+    function syncCollapseBtn() {
+        collapseBtn.textContent = collapsed ? "╷" : "╵";
+        collapseBtn.title = collapsed ? "Expand logs" : "Collapse logs";
+        logPane.querySelector(".log-scroll").style.display = collapsed ? "none" : "";
+    }
+
+    function applyCollapsed(save = true) {
+        detail.style.gridTemplateRows = collapsed ? `1fr ${TOOLBAR_H}px` : `1fr ${logH}px`;
+        if (save) localStorage.setItem("ocpp-log-collapsed", collapsed ? "1" : "0");
+        syncCollapseBtn();
+    }
+
+    collapseBtn.addEventListener("click", () => {
+        collapsed = !collapsed;
+        applyCollapsed();
+    });
+
+    // Double-click toolbar to toggle collapse
+    logPane.querySelector(".log-toolbar").addEventListener("dblclick", (e) => {
+        if (e.target === collapseBtn) return;
+        collapsed = !collapsed;
+        applyCollapsed();
+    });
+
+    // Drag resize
+    let dragStartY = 0, dragStartH = 0;
+
+    handle.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        dragStartY = e.clientY;
+        dragStartH = logH;
+        collapsed = false;
+        handle.classList.add("dragging");
+        document.body.style.cursor = "ns-resize";
+        document.body.style.userSelect = "none";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (!handle.classList.contains("dragging")) return;
+        const delta = dragStartY - e.clientY;   // drag up = bigger
+        setLogHeight(dragStartH + delta);
+    });
+
+    document.addEventListener("mouseup", () => {
+        if (!handle.classList.contains("dragging")) return;
+        handle.classList.remove("dragging");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        localStorage.setItem("ocpp-log-h", logH);
+    });
+
+    // Init
+    applyCollapsed(false);
+    if (!collapsed) setLogHeight(logH, false);
 
     renderStations();
     fetchHealth();
     setInterval(renderStations, 5000);
     setInterval(fetchHealth, 10000);
-    setInterval(fetchLogs, 3000);
+    setInterval(fetchLogs, 2000);
 </script>
 </body>
 </html>
