@@ -31,21 +31,24 @@ class RemoteStopTransactionOcppMessage extends OcppIncoming<
     }
     vcp.respond(this.response(call, { status: "Accepted" }));
 
+    const finalMeterValue = vcp.transactionManager.getMeterValue(transactionId);
+    vcp.transactionManager.stopTransaction(transactionId);
+
     const ocmf = generateOCMF({
       startTime: transaction.startedAt,
       startEnergy: 0,
       endTime: new Date(),
-      endEnergy: vcp.transactionManager.getMeterValue(transactionId) / 1000,
+      endEnergy: finalMeterValue / 1000,
       idTag: transaction.idTag,
     });
 
     vcp.send(
       stopTransactionOcppMessage.request({
         transactionId: transactionId,
-        meterStop: Math.floor(
-          vcp.transactionManager.getMeterValue(transactionId),
-        ),
+        meterStop: Math.floor(finalMeterValue),
         timestamp: new Date().toISOString(),
+        reason: "Remote",
+        idTag: transaction.idTag,
         transactionData: [
           {
             timestamp: new Date().toISOString(),

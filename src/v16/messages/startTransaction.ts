@@ -48,9 +48,9 @@ class StartTransactionOcppMessage extends OcppOutgoing<
                 timestamp: new Date().toISOString(),
                 sampledValue: [
                   {
-                    value: (transactionState.meterValue / 1000).toString(),
+                    value: transactionState.meterValue.toString(),
                     measurand: "Energy.Active.Import.Register",
-                    unit: "kWh",
+                    unit: "Wh",
                   },
                 ],
               },
