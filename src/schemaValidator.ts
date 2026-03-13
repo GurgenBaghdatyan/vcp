@@ -44,7 +44,6 @@ const getOcppOutgoingMessages = (ocppVersion: OcppVersion) => {
 export const validateOcppIncomingRequest = (
   ocppVersion: OcppVersion,
   action: string,
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp message
   payload: any,
 ) => {
   if (!SCHEMA_VALIDATION_ENABLED) {
@@ -62,7 +61,6 @@ export const validateOcppIncomingRequest = (
 export const validateOcppIncomingResponse = (
   ocppVersion: OcppVersion,
   action: string,
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp message
   payload: any,
 ) => {
   if (!SCHEMA_VALIDATION_ENABLED) {
@@ -80,7 +78,6 @@ export const validateOcppIncomingResponse = (
 export const validateOcppOutgoingRequest = (
   ocppVersion: OcppVersion,
   action: string,
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp message
   payload: any,
 ) => {
   if (!SCHEMA_VALIDATION_ENABLED) {
@@ -98,7 +95,6 @@ export const validateOcppOutgoingRequest = (
 export const validateOcppOutgoingResponse = (
   ocppVersion: OcppVersion,
   action: string,
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp message
   payload: any,
 ) => {
   if (!SCHEMA_VALIDATION_ENABLED) {

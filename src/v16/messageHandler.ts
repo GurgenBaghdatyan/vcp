@@ -54,7 +54,6 @@ import { triggerMessageOcppMessage } from "./messages/triggerMessage";
 import { unlockConnectorOcppMessage } from "./messages/unlockConnector";
 import { updateFirmwareOcppMessage } from "./messages/updateFirmware";
 
-// Collection for incoming messages (used for handleCall)
 export const ocppIncomingMessages: {
   [key: string]: OcppIncoming<z.ZodTypeAny, z.ZodTypeAny>;
 } = {
@@ -86,7 +85,6 @@ export const ocppIncomingMessages: {
   UpdateFirmware: updateFirmwareOcppMessage,
 };
 
-// Collection for outgoing messages (used for handleCallResult)
 export const ocppOutgoingMessages: {
   [key: string]: OcppOutgoing<z.ZodTypeAny, z.ZodTypeAny>;
 } = {
@@ -108,7 +106,6 @@ export const ocppOutgoingMessages: {
 };
 
 export const messageHandlerV16: OcppMessageHandler = {
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp types
   handleCall: (vcp: VCP, call: OcppCall<any>): void => {
     const ocppMessage = ocppIncomingMessages[call.action];
     if (!ocppMessage) {
@@ -120,9 +117,7 @@ export const messageHandlerV16: OcppMessageHandler = {
   },
   handleCallResult: (
     vcp: VCP,
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     call: OcppCall<any>,
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     result: OcppCallResult<any>,
   ): void => {
     const ocppMessage = ocppOutgoingMessages[result.action];
@@ -133,8 +128,6 @@ export const messageHandlerV16: OcppMessageHandler = {
     }
     ocppMessage.resHandler(vcp, call, result);
   },
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp types
   handleCallError: (vcp: VCP, error: OcppCallError<any>): void => {
-    // NOOP
   },
 };

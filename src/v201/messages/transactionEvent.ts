@@ -98,7 +98,6 @@ class TransactionEventOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<TransactionEventReqType>>,
     _result: OcppCallResult<z.infer<TransactionEventResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

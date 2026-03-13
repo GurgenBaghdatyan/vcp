@@ -53,7 +53,6 @@ class SignedUpdateFirmwareOutgoingOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<SignedUpdateFirmwareReqType>>,
     _result: OcppCallResult<z.infer<SignedUpdateFirmwareResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

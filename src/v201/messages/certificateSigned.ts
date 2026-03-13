@@ -30,7 +30,6 @@ class CertificateSignedOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<CertificateSignedReqType>>,
     _result: OcppCallResult<z.infer<CertificateSignedResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

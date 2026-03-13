@@ -29,7 +29,6 @@ class NotifyCustomerInformationOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyCustomerInformationReqType>>,
     _result: OcppCallResult<z.infer<NotifyCustomerInformationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

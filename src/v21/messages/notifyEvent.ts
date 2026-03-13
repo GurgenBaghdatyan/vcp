@@ -49,7 +49,6 @@ class NotifyEventOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyEventReqType>>,
     _result: OcppCallResult<z.infer<NotifyEventResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

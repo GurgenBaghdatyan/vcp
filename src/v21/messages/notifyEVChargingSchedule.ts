@@ -32,7 +32,6 @@ class NotifyEVChargingScheduleOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyEVChargingScheduleReqType>>,
     _result: OcppCallResult<z.infer<NotifyEVChargingScheduleResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

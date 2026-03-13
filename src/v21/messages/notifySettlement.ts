@@ -44,7 +44,6 @@ class NotifySettlementOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifySettlementReqType>>,
     _result: OcppCallResult<z.infer<NotifySettlementResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

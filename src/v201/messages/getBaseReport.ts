@@ -32,7 +32,6 @@ class GetBaseReportOcppIncoming extends OcppIncoming<
   ): Promise<void> => {
     vcp.respond(this.response(call, { status: "Accepted" }));
 
-    // Send NotifyReport
     vcp.send(
       notifyReportOcppOutgoing.request({
         requestId: call.payload.requestId,

@@ -26,7 +26,6 @@ class NotifyDisplayMessagesOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyDisplayMessagesReqType>>,
     _result: OcppCallResult<z.infer<NotifyDisplayMessagesResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

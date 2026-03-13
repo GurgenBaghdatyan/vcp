@@ -25,7 +25,6 @@ class SignCertificateOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<SignCertificateReqType>>,
     _result: OcppCallResult<z.infer<SignCertificateResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

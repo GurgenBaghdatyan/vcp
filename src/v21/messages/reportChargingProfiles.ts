@@ -28,7 +28,6 @@ class ReportChargingProfilesOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<ReportChargingProfilesReqType>>,
     _result: OcppCallResult<z.infer<ReportChargingProfilesResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

@@ -71,7 +71,7 @@ class RequestStopTransactionOcppIncoming extends OcppIncoming<
                 value: vcp.transactionManager.getMeterValue(transactionId),
                 signedMeterValue: {
                   signedMeterData: Buffer.from(ocmf).toString("base64"),
-                  signingMethod: "", // Already included in the signedMeterData
+                  signingMethod: "",
                   encodingMethod: "OCMF",
                   publicKey: getOCMFPublicKey().toString("base64"),
                 },

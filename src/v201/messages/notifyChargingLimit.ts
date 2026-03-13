@@ -80,7 +80,6 @@ class NotifyChargingLimitOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyChargingLimitReqType>>,
     _result: OcppCallResult<z.infer<NotifyChargingLimitResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

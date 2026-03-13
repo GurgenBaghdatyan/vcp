@@ -27,7 +27,6 @@ class CancelReservationOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<CancelReservationReqType>>,
     _result: OcppCallResult<z.infer<CancelReservationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

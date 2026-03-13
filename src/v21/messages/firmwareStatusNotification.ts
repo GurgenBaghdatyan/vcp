@@ -43,7 +43,6 @@ class FirmwareStatusNotificationOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<FirmwareStatusNotificationReqType>>,
     _result: OcppCallResult<z.infer<FirmwareStatusNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

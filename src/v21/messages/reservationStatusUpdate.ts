@@ -24,7 +24,6 @@ class ReservationStatusUpdateOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<ReservationStatusUpdateReqType>>,
     _result: OcppCallResult<z.infer<ReservationStatusUpdateResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

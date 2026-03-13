@@ -33,7 +33,6 @@ class Get15118EVCertificateOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<Get15118EVCertificateReqType>>,
     _result: OcppCallResult<z.infer<Get15118EVCertificateResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

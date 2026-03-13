@@ -35,7 +35,7 @@
         }
 
         body {
-            font-family: var(--sans);
+            font-family: var(--sans),serif;
             background: var(--bg);
             color: var(--text);
             display: grid;
@@ -56,7 +56,7 @@
         }
 
         .logo {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 13px;
             font-weight: 600;
             letter-spacing: .04em;
@@ -68,25 +68,13 @@
         }
 
         .badge {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 11px;
             padding: 3px 9px;
             border-radius: 99px;
             border: 1px solid var(--border2);
             color: var(--muted);
             margin-left: auto;
-        }
-
-        .badge.ok {
-            border-color: #166534;
-            color: var(--green);
-            background: #0f2b1a;
-        }
-
-        .badge.err {
-            border-color: #7f1d1d;
-            color: var(--red);
-            background: #2b0f0f;
         }
 
         nav {
@@ -100,41 +88,13 @@
         }
 
         .nav-section {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 10px;
             font-weight: 600;
             letter-spacing: .1em;
             text-transform: uppercase;
             color: var(--muted);
             padding: 8px 8px 4px;
-        }
-
-        .cmd-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 8px 10px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 7px;
-            color: var(--text);
-            font-family: var(--sans);
-            font-size: 13px;
-            cursor: pointer;
-            text-align: left;
-            transition: background .15s, border-color .15s;
-        }
-
-        .cmd-btn:hover {
-            background: var(--surface2);
-            border-color: var(--border);
-        }
-
-        .cmd-btn.active {
-            background: #1a2744;
-            border-color: var(--accent);
-            color: var(--accent2);
         }
 
         .cmd-dot {
@@ -489,7 +449,6 @@
     let activeBtn = null;
     let lastLogLen = 0;
 
-    // Sidebar
     for (const cmd of COMMANDS) {
         const btn = document.createElement("button");
         btn.className = "cmd-btn";

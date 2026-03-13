@@ -8,10 +8,6 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ══════════════════════════════════════════════
-           THEMES
-        ══════════════════════════════════════════════ */
-
         [data-theme="dark"] {
             --bg:         #080a0f;
             --surface:    #0e1117;
@@ -407,7 +403,6 @@
 </div>
 
 <script>
-    // ── Theme ──────────────────────────────────────────────────────────────────
     const THEMES = ["dark","dimmed","light","solarized"];
     const root   = document.documentElement;
 
@@ -426,7 +421,6 @@
 
     applyTheme(localStorage.getItem("ocpp-theme") || "dark");
 
-    // ── Commands ───────────────────────────────────────────────────────────────
     const COMMANDS = [
         { label:"Boot",      action:"BootNotification",   payload:{chargePointVendor:"Solidstudio",chargePointModel:"VirtualCP"} },
         { label:"Available", action:"StatusNotification", payload:{connectorId:1,errorCode:"NoError",status:"Available"} },
@@ -461,7 +455,6 @@
         el.className   = "form-msg" + (ok === true ? " msg-ok" : ok === false ? " msg-err" : "");
     }
 
-    // ── Stations ───────────────────────────────────────────────────────────────
     const STATUS_CLASS = {
         Available:    "cb-available",
         Charging:     "cb-charging",
@@ -579,7 +572,6 @@
         if (e.key === "Enter") document.getElementById("btn-send").click();
     });
 
-    // ── Logs ───────────────────────────────────────────────────────────────────
     async function fetchLogs() {
         if (!activeStation) return;
         try {
@@ -601,7 +593,6 @@
         } catch {}
     }
 
-    // ── Health ─────────────────────────────────────────────────────────────────
     async function fetchHealth() {
         const dot  = document.getElementById("status-dot");
         const text = document.getElementById("status-text");
@@ -615,13 +606,12 @@
         }
     }
 
-    // ── Log pane resize & collapse ─────────────────────────────────────────────
     const detail      = document.querySelector(".detail");
     const logPane     = document.getElementById("log-pane");
     const handle      = document.getElementById("log-resize-handle");
     const collapseBtn = document.getElementById("log-collapse-btn");
 
-    const MIN_LOG_H  = 36;   // collapsed — just toolbar
+    const MIN_LOG_H  = 36;
     const MAX_LOG_H  = 600;
     const DEF_LOG_H  = 220;
     const TOOLBAR_H  = 36;
@@ -654,14 +644,12 @@
         applyCollapsed();
     });
 
-    // Double-click toolbar to toggle collapse
     logPane.querySelector(".log-toolbar").addEventListener("dblclick", (e) => {
         if (e.target === collapseBtn) return;
         collapsed = !collapsed;
         applyCollapsed();
     });
 
-    // Drag resize
     let dragStartY = 0, dragStartH = 0;
 
     handle.addEventListener("mousedown", (e) => {
@@ -676,7 +664,7 @@
 
     document.addEventListener("mousemove", (e) => {
         if (!handle.classList.contains("dragging")) return;
-        const delta = dragStartY - e.clientY;   // drag up = bigger
+        const delta = dragStartY - e.clientY;
         setLogHeight(dragStartH + delta);
     });
 
@@ -688,7 +676,6 @@
         localStorage.setItem("ocpp-log-h", logH);
     });
 
-    // Init
     applyCollapsed(false);
     if (!collapsed) setLogHeight(logH, false);
 

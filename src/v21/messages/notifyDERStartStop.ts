@@ -26,7 +26,6 @@ class NotifyDERStartStopOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyDERStartStopReqType>>,
     _result: OcppCallResult<z.infer<NotifyDERStartStopResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

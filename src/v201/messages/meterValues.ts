@@ -25,7 +25,6 @@ class MeterValuesOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<MeterValuesReqType>>,
     _result: OcppCallResult<z.infer<MeterValuesResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

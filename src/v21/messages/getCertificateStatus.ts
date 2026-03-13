@@ -28,7 +28,6 @@ class GetCertificateStatusOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<GetCertificateStatusReqType>>,
     _result: OcppCallResult<z.infer<GetCertificateStatusResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

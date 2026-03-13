@@ -23,8 +23,6 @@ import {
 import {TransactionManager} from "./transactionManager";
 import {heartbeatOcppMessage} from "./v16/messages/heartbeat";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface VCPOptions {
     ocppVersion: OcppVersion;
     endpoint: string;
@@ -41,7 +39,6 @@ interface LogEntry {
     metadata: Record<string, unknown>;
 }
 
-// ── VCP ───────────────────────────────────────────────────────────────────────
 
 export class VCP extends EventEmitter {
     private ws?: WebSocket;
@@ -63,7 +60,6 @@ export class VCP extends EventEmitter {
         }
     }
 
-    // ── Public API ──────────────────────────────────────────────────────────────
 
     async connect(): Promise<void> {
         logger.info(`Connecting... | ${util.inspect(this.vcpOptions)}`);
@@ -93,7 +89,6 @@ export class VCP extends EventEmitter {
         });
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     send(ocppCall: OcppCall<any>) {
         if (!this.ws) throw new Error("Websocket not initialized. Call connect() first");
 
@@ -104,7 +99,6 @@ export class VCP extends EventEmitter {
         this.ws.send(jsonMessage);
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     respond(result: OcppCallResult<any>) {
         if (!this.ws) throw new Error("Websocket not initialized. Call connect() first");
 
@@ -114,7 +108,6 @@ export class VCP extends EventEmitter {
         this.ws.send(jsonMessage);
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     respondError(error: OcppCallError<any>) {
         if (!this.ws) throw new Error("Websocket not initialized. Call connect() first");
 
@@ -132,14 +125,11 @@ export class VCP extends EventEmitter {
         this.isFinishing = true;
         this.ws.close();
         this.ws = undefined;
-        process.exit(1);
     }
 
     async getDiagnosticData(): Promise<LogEntry[]> {
         return this.logBuffer;
     }
-
-    // ── Private ─────────────────────────────────────────────────────────────────
 
     private attachLogListener() {
         const transport = logger.transports[0];
@@ -225,7 +215,7 @@ export class VCP extends EventEmitter {
 
     private _onClose(code: number, reason: string) {
         if (this.isFinishing) return;
-        logger.info(`Connection closed. code=${code}, reason=${reason}`);
-        process.exit();
+        logger.info(`Connection closed. code=${code}, reason=${String(reason)}`);
+        this.emit("disconnected", { code, reason: String(reason) });
     }
 }

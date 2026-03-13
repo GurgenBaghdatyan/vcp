@@ -27,7 +27,6 @@ class SecurityEventNotificationOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<SecurityEventNotificationReqType>>,
     _result: OcppCallResult<z.infer<SecurityEventNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

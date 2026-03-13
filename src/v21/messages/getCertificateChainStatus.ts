@@ -5,7 +5,7 @@ import {
   OcppOutgoing,
 } from "../../ocppMessage";
 import type { VCP } from "../../vcp";
-import { CertificateHashDataTypeSchema, StatusInfoTypeSchema } from "./_common";
+import { CertificateHashDataTypeSchema } from "./_common";
 
 const GetCertificateChainStatusReqSchema = z.object({
   certificateStatusRequests: z.array(
@@ -43,7 +43,6 @@ class GetCertificateChainStatusOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<GetCertificateChainStatusReqType>>,
     _result: OcppCallResult<z.infer<GetCertificateChainStatusResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

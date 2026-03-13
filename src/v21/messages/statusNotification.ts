@@ -5,7 +5,6 @@ import {
   OcppOutgoing,
 } from "../../ocppMessage";
 import type { VCP } from "../../vcp";
-import { StatusInfoTypeSchema } from "./_common";
 
 const StatusNotificationReqSchema = z.object({
   timestamp: z.string().datetime(),
@@ -33,7 +32,6 @@ class StatusNotificationOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<StatusNotificationReqType>>,
     _result: OcppCallResult<z.infer<StatusNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

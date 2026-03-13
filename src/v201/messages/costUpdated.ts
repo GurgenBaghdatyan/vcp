@@ -19,7 +19,6 @@ class CostUpdatedOcppIncoming extends OcppIncoming<
     _vcp: VCP,
     _call: OcppCall<z.infer<CostUpdatedReqType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

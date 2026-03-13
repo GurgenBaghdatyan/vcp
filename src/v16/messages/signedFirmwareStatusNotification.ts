@@ -41,7 +41,6 @@ class SignedFirmwareStatusNotificationOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<SignedFirmwareStatusNotificationReqType>>,
     _result: OcppCallResult<z.infer<SignedFirmwareStatusNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

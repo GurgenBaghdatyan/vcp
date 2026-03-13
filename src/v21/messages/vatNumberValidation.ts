@@ -40,7 +40,6 @@ class VatNumberValidationOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<VatNumberValidationReqType>>,
     _result: OcppCallResult<z.infer<VatNumberValidationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

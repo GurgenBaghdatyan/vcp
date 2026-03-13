@@ -50,7 +50,6 @@ class AuthorizeOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<AuthorizeReqType>>,
     _result: OcppCallResult<z.infer<AuthorizeResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

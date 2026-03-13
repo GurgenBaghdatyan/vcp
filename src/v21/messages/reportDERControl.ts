@@ -119,7 +119,6 @@ class ReportDERControlOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<ReportDERControlReqType>>,
     _result: OcppCallResult<z.infer<ReportDERControlResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

@@ -33,7 +33,6 @@ class NotifyPeriodicEventStreamOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyPeriodicEventStreamReqType>>,
     _result: OcppCallResult<z.infer<NotifyPeriodicEventStreamResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

@@ -23,7 +23,6 @@ class HeartbeatOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<HeartbeatReqType>>,
     _result: OcppCallResult<z.infer<HeartbeatResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

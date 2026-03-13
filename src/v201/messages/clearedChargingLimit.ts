@@ -24,7 +24,6 @@ class ClearedChargingLimitOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<ClearedChargingLimitReqType>>,
     _result: OcppCallResult<z.infer<ClearedChargingLimitResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

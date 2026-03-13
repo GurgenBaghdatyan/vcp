@@ -24,7 +24,6 @@ class NotifyPriorityChargingOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyPriorityChargingReqType>>,
     _result: OcppCallResult<z.infer<NotifyPriorityChargingResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

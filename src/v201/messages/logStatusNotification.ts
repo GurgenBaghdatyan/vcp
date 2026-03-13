@@ -33,7 +33,6 @@ class LogStatusNotificationOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<LogStatusNotificationReqType>>,
     _result: OcppCallResult<z.infer<LogStatusNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

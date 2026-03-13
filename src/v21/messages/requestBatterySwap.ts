@@ -52,7 +52,6 @@ class RequestBatterySwapOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<RequestBatterySwapReqType>>,
     _result: OcppCallResult<z.infer<RequestBatterySwapResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

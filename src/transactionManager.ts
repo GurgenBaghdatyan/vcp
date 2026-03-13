@@ -35,7 +35,6 @@ export class TransactionManager {
 
   startTransaction(vcp: VCP, startTransactionProps: StartTransactionProps) {
     const meterValuesTimer = setInterval(() => {
-      // biome-ignore lint/style/noNonNullAssertion: transaction must exist
       const currentTransactionState = this.transactions.get(
         startTransactionProps.transactionId,
       )!;

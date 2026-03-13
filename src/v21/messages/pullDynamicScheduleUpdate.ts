@@ -30,7 +30,6 @@ class PullDynamicScheduleUpdateOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<PullDynamicScheduleUpdateReqType>>,
     _result: OcppCallResult<z.infer<PullDynamicScheduleUpdateResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

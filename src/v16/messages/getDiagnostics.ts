@@ -30,7 +30,6 @@ class GetDiagnosticsOcppMessage extends OcppIncoming<
   ): Promise<void> => {
     const fileName = `diagnostics_${new Date().toISOString()}.log`;
 
-    // do not await this, it will block the OCPP response
     asyncUploadDiagnostics(vcp, call, fileName);
 
     vcp.respond(
@@ -55,25 +54,20 @@ const asyncUploadDiagnostics = async (
   const diagnosticData = await vcp.getDiagnosticData();
 
   try {
-    // Ensure diagnosticData is properly stringified and formatted
     let diagnosticContent: string;
     try {
-      // If diagnosticData is already a string, use it directly
       if (typeof diagnosticData === "string") {
         diagnosticContent = diagnosticData;
       } else {
-        // If it's an object/array, stringify it
         diagnosticContent = JSON.stringify(diagnosticData, null, 2);
       }
     } catch (e) {
-      // If JSON.stringify fails, convert to string
       diagnosticContent = String(diagnosticData);
     }
 
-    // Parse FTP URL
     const ftpUrl = new URL(call.payload.location);
     const ftpClient = new FtpClient();
-    ftpClient.ftp.verbose = true; // Enable verbose logging for debugging
+    ftpClient.ftp.verbose = true;
 
     await ftpClient.access({
       host: ftpUrl.hostname,
@@ -83,28 +77,23 @@ const asyncUploadDiagnostics = async (
       secure: false,
     });
 
-    // Extract the directory path and ensure it exists
     const pathParts = ftpUrl.pathname.split("/").filter(Boolean);
     const remoteFileName = fileName;
 
-    // If there are path parts, try to navigate to the directory
     if (pathParts.length > 0) {
       for (const part of pathParts) {
         try {
           await ftpClient.cd(part);
         } catch (e) {
-          // If directory doesn't exist, try to create it
           await ftpClient.send(`MKD ${part}`);
           await ftpClient.cd(part);
         }
       }
     }
 
-    // Create a buffer from the content and then a stream
     const buffer = Buffer.from(diagnosticContent, "utf8");
     const contentStream = Readable.from(buffer);
 
-    // Upload the file using a stream
     await ftpClient.uploadFrom(contentStream, remoteFileName);
 
     await ftpClient.close();

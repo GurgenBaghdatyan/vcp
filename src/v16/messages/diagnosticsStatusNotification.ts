@@ -25,7 +25,6 @@ class DiagnosticsStatusNotificationOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<DiagnosticsStatusNotificationReqType>>,
     _result: OcppCallResult<z.infer<DiagnosticsStatusNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

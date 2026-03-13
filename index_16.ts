@@ -8,18 +8,16 @@ import {Hono} from "hono";
 import {z} from "zod";
 import {OcppVersion} from "./src/ocppVersion";
 import {call} from "./src/messageFactory";
+import {logger} from "./src/logger";
 import {bootNotificationOcppMessage} from "./src/v16/messages/bootNotification";
 import {statusNotificationOcppMessage} from "./src/v16/messages/statusNotification";
 import {VCP} from "./src/vcp";
 
-// ── Config ────────────────────────────────────────────────────────────────────
 
 const defaultEndpoint = process.env.WS_URL ?? "ws://localhost:8088/OCPP";
 const defaultCpId = process.env.CP_ID ?? "123456";
 const defaultPassword = process.env.PASSWORD;
 const adminPort = Number.parseInt(process.env.ADMIN_PORT ?? "9999");
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface StationEntry {
     vcp: VCP;
@@ -27,8 +25,6 @@ interface StationEntry {
     endpoint: string;
     connectedAt: string;
 }
-
-// ── Station registry ──────────────────────────────────────────────────────────
 
 const stations = new Map<string, StationEntry>();
 
@@ -60,16 +56,19 @@ async function spawnStation(chargePointId: string, endpoint: string, password?: 
     }));
 
     stations.set(chargePointId, {vcp, chargePointId, endpoint, connectedAt: new Date().toISOString()});
+
+    vcp.on("disconnected", () => {
+        logger.info(`Station ${chargePointId} disconnected unexpectedly — removing from registry`);
+        stations.delete(chargePointId);
+    });
 }
 const adminApi = new Hono();
 
-// ── Boot default station ──────────────────────────────────────────────────────
 
 (async () => {
     await spawnStation(defaultCpId, defaultEndpoint, defaultPassword);
     console.log(`✅  Station ${defaultCpId} started. Admin UI → http://localhost:${adminPort}/ui`);
 })();
-// ── Admin API ─────────────────────────────────────────────────────────────────
 
 
 adminApi.use("*", async (c, next) => {
@@ -156,7 +155,5 @@ adminApi.get("/ui", (c) => {
     const html = fs.readFileSync(path.join(__dirname, "ui/station-manager.html"), "utf-8");
     return c.html(html);
 });
-
-// ── Start server ──────────────────────────────────────────────────────────────
 
 serve({fetch: adminApi.fetch, port: adminPort});

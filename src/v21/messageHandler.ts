@@ -105,7 +105,6 @@ import { updateFirmwareOcppIncoming } from "./messages/updateFirmware";
 import { usePriorityChargingOcppIncoming } from "./messages/usePriorityCharging";
 import { vatNumberValidationOcppOutgoing } from "./messages/vatNumberValidation";
 
-// Incoming messages (messages that are received by the CSMS)
 export const ocppIncomingMessages: {
   [key: string]: OcppIncoming<z.ZodTypeAny, z.ZodTypeAny>;
 } = {
@@ -166,7 +165,6 @@ export const ocppIncomingMessages: {
   SetDERControl: setDERControlOcppIncoming,
 };
 
-// Outgoing messages (messages that are sent by the CSMS)
 export const ocppOutgoingMessages: {
   [key: string]: OcppOutgoing<z.ZodTypeAny, z.ZodTypeAny>;
 } = {
@@ -212,7 +210,6 @@ export const ocppOutgoingMessages: {
 };
 
 export const messageHandlerV21: OcppMessageHandler = {
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp types
   handleCall: (vcp: VCP, call: OcppCall<any>): void => {
     const ocppMessage = ocppIncomingMessages[call.action];
     if (!ocppMessage) {
@@ -224,9 +221,7 @@ export const messageHandlerV21: OcppMessageHandler = {
   },
   handleCallResult: (
     vcp: VCP,
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     call: OcppCall<any>,
-    // biome-ignore lint/suspicious/noExplicitAny: ocpp types
     result: OcppCallResult<any>,
   ): void => {
     const ocppMessage = ocppOutgoingMessages[result.action];
@@ -237,8 +232,6 @@ export const messageHandlerV21: OcppMessageHandler = {
     }
     ocppMessage.resHandler(vcp, call, result);
   },
-  // biome-ignore lint/suspicious/noExplicitAny: ocpp types
   handleCallError: (vcp: VCP, error: OcppCallError<any>): void => {
-    // NOOP
   },
 };

@@ -42,7 +42,6 @@ class NotifyDERAlarmOcppOutgoing extends OcppOutgoing<
     _call: OcppCall<z.infer<NotifyDERAlarmReqType>>,
     _result: OcppCallResult<z.infer<NotifyDERAlarmResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 

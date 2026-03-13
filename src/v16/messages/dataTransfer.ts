@@ -46,7 +46,6 @@ class DataTransferOutgoingOcppMessage extends OcppOutgoing<
     _call: OcppCall<z.infer<DataTransferReqType>>,
     _result: OcppCallResult<z.infer<DataTransferResType>>,
   ): Promise<void> => {
-    // NOOP
   };
 }
 
