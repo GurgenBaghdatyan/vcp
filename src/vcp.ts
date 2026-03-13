@@ -45,6 +45,7 @@ export class VCP extends EventEmitter {
     private readonly messageHandler: OcppMessageHandler;
     private readonly logBuffer: LogEntry[] = [];
     private isFinishing = false;
+    private intervals: ReturnType<typeof setInterval>[] = [];
 
     transactionManager = new TransactionManager();
 
@@ -108,12 +109,15 @@ export class VCP extends EventEmitter {
         this.ws.send(jsonMessage);
     }
     configureHeartbeat(interval: number) {
-        setInterval(() => this.send(heartbeatOcppMessage.request({})), interval);
+        const id = setInterval(() => this.send(heartbeatOcppMessage.request({})), interval);
+        this.intervals.push(id);
     }
 
     close() {
         if (!this.ws) throw new Error("Trying to close a Websocket that was not opened. Call connect() first");
         this.isFinishing = true;
+        this.intervals.forEach(clearInterval);
+        this.intervals = [];
         this.ws.close();
         this.ws = undefined;
     }
