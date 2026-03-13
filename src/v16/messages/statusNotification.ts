@@ -49,20 +49,20 @@ const StatusNotificationResSchema = z.object({});
 type StatusNotificationResType = typeof StatusNotificationResSchema;
 
 class StatusNotificationOcppMessage extends OcppOutgoing<
-  StatusNotificationReqType,
-  StatusNotificationResType
+    StatusNotificationReqType,
+    StatusNotificationResType
 > {
   resHandler = async (
-    _vcp: VCP,
-    _call: OcppCall<z.infer<StatusNotificationReqType>>,
-    _result: OcppCallResult<z.infer<StatusNotificationResType>>,
+      vcp: VCP,
+      call: OcppCall<z.infer<StatusNotificationReqType>>,
+      _result: OcppCallResult<z.infer<StatusNotificationResType>>,
   ): Promise<void> => {
-    // NOOP
+    vcp.connectorStatus.set(call.payload.connectorId, call.payload.status);
   };
 }
 
 export const statusNotificationOcppMessage = new StatusNotificationOcppMessage(
-  "StatusNotification",
-  StatusNotificationReqSchema,
-  StatusNotificationResSchema,
+    "StatusNotification",
+    StatusNotificationReqSchema,
+    StatusNotificationResSchema,
 );

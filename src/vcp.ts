@@ -1,3 +1,4 @@
+import {EventEmitter} from "node:events";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as util from "node:util";
@@ -42,7 +43,7 @@ interface LogEntry {
 
 // ── VCP ───────────────────────────────────────────────────────────────────────
 
-export class VCP {
+export class VCP extends EventEmitter {
     private ws?: WebSocket;
     private readonly messageHandler: OcppMessageHandler;
     private readonly logBuffer: LogEntry[] = [];
@@ -50,7 +51,11 @@ export class VCP {
 
     transactionManager = new TransactionManager();
 
+    /** connectorId → last reported status */
+    connectorStatus: Map<number, string> = new Map();
+
     constructor(private readonly vcpOptions: VCPOptions) {
+        super();
         this.messageHandler = resolveMessageHandler(vcpOptions.ocppVersion);
         this.attachLogListener();
         if (vcpOptions.adminPort) {
@@ -200,12 +205,15 @@ export class VCP {
         if (type === 2) {
             const [messageId, action, payload] = rest;
             validateOcppIncomingRequest(this.vcpOptions.ocppVersion, action, payload);
+            this.emit(`_incoming:${action}`, payload);
             this.messageHandler.handleCall(this, {messageId, action, payload});
         } else if (type === 3) {
             const [messageId, payload] = rest;
             const enqueuedCall = ocppOutbox.get(messageId);
             if (!enqueuedCall) throw new Error(`Received CallResult for unknown messageId=${messageId}`);
             validateOcppOutgoingResponse(this.vcpOptions.ocppVersion, enqueuedCall.action, payload);
+            this.emit(`_response:${enqueuedCall.action}`, payload);
+            this.emit("_lastPayload", payload);
             this.messageHandler.handleCallResult(this, enqueuedCall, {messageId, payload, action: enqueuedCall.action});
         } else if (type === 4) {
             const [messageId, errorCode, errorDescription, errorDetails] = rest;

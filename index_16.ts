@@ -139,6 +139,19 @@ adminApi.get("/stations/:id/logs", async (c) => {
     return c.json({logs});
 });
 
+adminApi.get("/stations/:id/state", (c) => {
+    const id = c.req.param("id");
+    const entry = stations.get(id);
+    if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+    const connectors = Object.fromEntries(entry.vcp.connectorStatus);
+    return c.json({
+        chargePointId: entry.chargePointId,
+        endpoint: entry.endpoint,
+        connectedAt: entry.connectedAt,
+        connectors,
+    });
+});
+
 adminApi.get("/ui", (c) => {
     const html = fs.readFileSync(path.join(__dirname, "ui/station-manager.html"), "utf-8");
     return c.html(html);
