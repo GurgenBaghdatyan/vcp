@@ -10,7 +10,7 @@ import {Hono} from "hono";
 import {z} from "zod";
 import {logger} from "./logger";
 import {call} from "./messageFactory";
-import type {OcppCall, OcppCallError, OcppCallResult} from "./ocppMessage";
+import type {OcppCall, OcppCallResult} from "./ocppMessage";
 import {type OcppMessageHandler, resolveMessageHandler} from "./ocppMessageHandler";
 import {ocppOutbox} from "./ocppOutbox";
 import {type OcppVersion, toProtocolVersion} from "./ocppVersion";
@@ -89,7 +89,7 @@ export class VCP extends EventEmitter {
         });
     }
 
-    send(ocppCall: OcppCall<any>) {
+    send(ocppCall: OcppCall) {
         if (!this.ws) throw new Error("Websocket not initialized. Call connect() first");
 
         ocppOutbox.enqueue(ocppCall);
@@ -99,7 +99,7 @@ export class VCP extends EventEmitter {
         this.ws.send(jsonMessage);
     }
 
-    respond(result: OcppCallResult<any>) {
+    respond(result: OcppCallResult) {
         if (!this.ws) throw new Error("Websocket not initialized. Call connect() first");
 
         const jsonMessage = JSON.stringify([3, result.messageId, result.payload]);
@@ -107,15 +107,6 @@ export class VCP extends EventEmitter {
         validateOcppIncomingResponse(this.vcpOptions.ocppVersion, result.action, JSON.parse(JSON.stringify(result.payload)));
         this.ws.send(jsonMessage);
     }
-
-    respondError(error: OcppCallError<any>) {
-        if (!this.ws) throw new Error("Websocket not initialized. Call connect() first");
-
-        const jsonMessage = JSON.stringify([4, error.messageId, error.errorCode, error.errorDescription, error.errorDetails]);
-        logger.info(`Responding with ➡️  ${jsonMessage}`);
-        this.ws.send(jsonMessage);
-    }
-
     configureHeartbeat(interval: number) {
         setInterval(() => this.send(heartbeatOcppMessage.request({})), interval);
     }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type OcppCall, OcppCallResult, OcppIncoming } from "../../ocppMessage";
+import { type OcppCall, OcppIncoming } from "../../ocppMessage";
 import type { VCP } from "../../vcp";
 import {
   ComponentTypeSchema,

@@ -56,11 +56,7 @@ const asyncUploadDiagnostics = async (
   try {
     let diagnosticContent: string;
     try {
-      if (typeof diagnosticData === "string") {
-        diagnosticContent = diagnosticData;
-      } else {
-        diagnosticContent = JSON.stringify(diagnosticData, null, 2);
-      }
+      diagnosticContent = JSON.stringify(diagnosticData, null, 2);
     } catch (e) {
       diagnosticContent = String(diagnosticData);
     }

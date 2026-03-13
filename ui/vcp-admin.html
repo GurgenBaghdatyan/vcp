@@ -168,7 +168,7 @@
         }
 
         .state-value {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 13px;
             color: var(--text);
         }
@@ -194,7 +194,7 @@
             border: 1px solid var(--border2);
             border-radius: 7px;
             color: var(--text);
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 13px;
             outline: none;
             transition: border-color .15s;
@@ -218,7 +218,7 @@
             border: none;
             border-radius: 7px;
             color: #fff;
-            font-family: var(--sans);
+            font-family: var(--sans),serif;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
@@ -230,16 +230,8 @@
         }
 
         #send-status {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 12px;
-        }
-
-        .status-ok {
-            color: var(--green);
-        }
-
-        .status-err {
-            color: var(--red);
         }
 
         .log-pane {
@@ -260,7 +252,7 @@
         }
 
         .log-title {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 11px;
             font-weight: 600;
             letter-spacing: .06em;
@@ -269,13 +261,16 @@
         }
 
         .log-count {
-            font-family: var(--mono);
-            font-size: 10px;
+            font-family: var(--mono),serif;
             background: var(--surface2);
             border: 1px solid var(--border2);
             color: var(--muted);
             padding: 1px 7px;
             border-radius: 99px;
+        }
+
+        .log-count {
+            font-size: 10px;
         }
 
         .log-scroll {
@@ -285,7 +280,7 @@
         }
 
         .log-line {
-            font-family: var(--mono);
+            font-family: var(--mono),serif;
             font-size: 12px;
             line-height: 1.7;
             white-space: pre-wrap;
@@ -294,18 +289,6 @@
 
         .log-ts {
             color: #334155;
-        }
-
-        .log-info {
-            color: #38bdf8;
-        }
-
-        .log-warn {
-            color: var(--yellow);
-        }
-
-        .log-error {
-            color: var(--red);
         }
 
         .log-msg {
@@ -339,7 +322,7 @@
         <div class="panel">
             <div class="panel-header">
                 <span>Connection State</span>
-                <span id="ready-state" style="font-family:var(--mono);font-size:11px;"></span>
+                <span id="ready-state" style="font-family:var(--mono),serif;font-size:11px;"></span>
             </div>
             <div class="panel-body">
                 <div class="state-grid">
@@ -367,12 +350,12 @@
             <div class="panel-body" style="display:flex;flex-direction:column;gap:12px;">
                 <div class="form-row">
                     <label class="field-label">Action</label>
-                    <input id="action" class="field" readonly placeholder="Select a command →"/>
+                    <label for="action"></label><input id="action" class="field" readonly placeholder="Select a command →"/>
                 </div>
                 <div class="form-row">
                     <label class="field-label">Payload <span
                             style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(JSON)</span></label>
-                    <textarea id="payload" class="field" rows="6" spellcheck="false"></textarea>
+                    <label for="payload"></label><textarea id="payload" class="field" rows="6" spellcheck="false"></textarea>
                 </div>
                 <div class="send-row">
                     <button class="btn-send" id="btn-send">Send ↗</button>
@@ -536,7 +519,7 @@
             statusEl.textContent = "✓ Sent";
             statusEl.className = "status-ok";
             setTimeout(() => statusEl.textContent = "", 3000);
-            fetchLogs();
+            await fetchLogs();
         } catch (e) {
             statusEl.textContent = "Error: " + e.message;
             statusEl.className = "status-err";
