@@ -39,11 +39,23 @@ interface LogEntry {
     metadata: Record<string, unknown>;
 }
 
+export interface TrafficEntry {
+    id: string;
+    timestamp: string;
+    direction: "out" | "in";
+    messageType: "Call" | "CallResult" | "CallError";
+    messageId: string;
+    action: string;
+    payload: unknown;
+    errorCode?: string;
+    errorDescription?: string;
+}
 
 export class VCP extends EventEmitter {
     private ws?: WebSocket;
     private readonly messageHandler: OcppMessageHandler;
     private readonly logBuffer: LogEntry[] = [];
+    private readonly trafficBuffer: TrafficEntry[] = [];
     private isFinishing = false;
     private intervals: ReturnType<typeof setInterval>[] = [];
 
@@ -98,6 +110,7 @@ export class VCP extends EventEmitter {
         logger.info(`Sending message ➡️  ${jsonMessage}`);
         validateOcppOutgoingRequest(this.vcpOptions.ocppVersion, ocppCall.action, JSON.parse(JSON.stringify(ocppCall.payload)));
         this.ws.send(jsonMessage);
+        this.recordTraffic({ direction: "out", messageType: "Call", messageId: ocppCall.messageId, action: ocppCall.action, payload: ocppCall.payload });
     }
 
     respond(result: OcppCallResult) {
@@ -107,6 +120,7 @@ export class VCP extends EventEmitter {
         logger.info(`Responding with ➡️  ${jsonMessage}`);
         validateOcppIncomingResponse(this.vcpOptions.ocppVersion, result.action, JSON.parse(JSON.stringify(result.payload)));
         this.ws.send(jsonMessage);
+        this.recordTraffic({ direction: "out", messageType: "CallResult", messageId: result.messageId, action: result.action, payload: result.payload });
     }
     configureHeartbeat(interval: number) {
         const id = setInterval(() => this.send(heartbeatOcppMessage.request({})), interval);
@@ -124,6 +138,20 @@ export class VCP extends EventEmitter {
 
     async getDiagnosticData(): Promise<LogEntry[]> {
         return this.logBuffer;
+    }
+
+    getTrafficData(): TrafficEntry[] {
+        return this.trafficBuffer;
+    }
+
+    private recordTraffic(entry: Omit<TrafficEntry, "id" | "timestamp">) {
+        this.trafficBuffer.push({
+            id: Math.random().toString(36).slice(2),
+            timestamp: new Date().toISOString(),
+            ...entry,
+        });
+        if (this.trafficBuffer.length > 500) this.trafficBuffer.shift();
+        this.emit("traffic", this.trafficBuffer[this.trafficBuffer.length - 1]);
     }
 
     private attachLogListener() {
@@ -190,6 +218,7 @@ export class VCP extends EventEmitter {
         if (type === 2) {
             const [messageId, action, payload] = rest;
             validateOcppIncomingRequest(this.vcpOptions.ocppVersion, action, payload);
+            this.recordTraffic({ direction: "in", messageType: "Call", messageId, action, payload });
             this.emit(`_incoming:${action}`, payload);
             this.messageHandler.handleCall(this, {messageId, action, payload});
         } else if (type === 3) {
@@ -197,11 +226,13 @@ export class VCP extends EventEmitter {
             const enqueuedCall = ocppOutbox.get(messageId);
             if (!enqueuedCall) throw new Error(`Received CallResult for unknown messageId=${messageId}`);
             validateOcppOutgoingResponse(this.vcpOptions.ocppVersion, enqueuedCall.action, payload);
+            this.recordTraffic({ direction: "in", messageType: "CallResult", messageId, action: enqueuedCall.action, payload });
             this.emit(`_response:${enqueuedCall.action}`, payload);
             this.emit("_lastPayload", payload);
             this.messageHandler.handleCallResult(this, enqueuedCall, {messageId, payload, action: enqueuedCall.action});
         } else if (type === 4) {
             const [messageId, errorCode, errorDescription, errorDetails] = rest;
+            this.recordTraffic({ direction: "in", messageType: "CallError", messageId, action: "", payload: errorDetails, errorCode, errorDescription });
             this.messageHandler.handleCallError(this, {messageId, errorCode, errorDescription, errorDetails});
         } else {
             throw new Error(`Unrecognized message type ${type}`);

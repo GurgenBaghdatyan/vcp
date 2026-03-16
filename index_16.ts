@@ -5,6 +5,7 @@ import * as path from "node:path";
 import {serve} from "@hono/node-server";
 import {zValidator} from "@hono/zod-validator";
 import {Hono} from "hono";
+import {streamSSE} from "hono/streaming";
 import {z} from "zod";
 import {OcppVersion} from "./src/ocppVersion";
 import {call} from "./src/messageFactory";
@@ -136,6 +137,58 @@ adminApi.get("/stations/:id/logs", async (c) => {
     if (!entry) return c.json({ok: false, error: "Not found"}, 404);
     const logs = await entry.vcp.getDiagnosticData();
     return c.json({logs});
+});
+
+adminApi.get("/stations/:id/logs/stream", async (c) => {
+    const id = c.req.param("id");
+    const entry = stations.get(id);
+    if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+
+    return streamSSE(c, async (stream) => {
+        // send current snapshot first
+        const logs = await entry.vcp.getDiagnosticData();
+        await stream.writeSSE({ data: JSON.stringify({ type: "snapshot", logs }) });
+
+        // then stream new entries
+        await new Promise<void>((resolve) => {
+            const onLog = async (info: object) => {
+                try {
+                    await stream.writeSSE({ data: JSON.stringify({ type: "log", entry: info }) });
+                } catch { resolve(); }
+            };
+            entry.vcp.on("log", onLog);
+            stream.onAbort(() => { entry.vcp.off("log", onLog); resolve(); });
+        });
+    });
+});
+
+adminApi.get("/stations/:id/traffic", (c) => {
+    const id = c.req.param("id");
+    const entry = stations.get(id);
+    if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+    return c.json({ traffic: entry.vcp.getTrafficData() });
+});
+
+adminApi.get("/stations/:id/traffic/stream", async (c) => {
+    const id = c.req.param("id");
+    const entry = stations.get(id);
+    if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+
+    return streamSSE(c, async (stream) => {
+        // send existing snapshot first
+        await stream.writeSSE({ data: JSON.stringify({ type: "snapshot", traffic: entry.vcp.getTrafficData() }) });
+
+        // then stream new entries live
+        await new Promise<void>((resolve) => {
+            const onTraffic = async (t: object) => {
+                try {
+                    await stream.writeSSE({ data: JSON.stringify({ type: "entry", entry: t }) });
+                } catch { resolve(); }
+            };
+            entry.vcp.on("traffic", onTraffic);
+            stream.onAbort(() => { entry.vcp.off("traffic", onTraffic); resolve(); });
+        });
+    });
 });
 
 adminApi.get("/stations/:id/state", (c) => {
