@@ -34,7 +34,20 @@
     <div class="sidebar">
         <div class="sidebar-section">
             <span class="section-label">Stations</span>
-            <span class="count-pill" id="station-count">0</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span class="count-pill" id="station-count">0</span>
+                <label class="select-all-wrap" title="Select all">
+                    <input type="checkbox" id="select-all-cb">
+                    <span class="select-all-label">All</span>
+                </label>
+            </div>
+        </div>
+        <!-- Group action bar (visible when stations selected) -->
+        <div class="group-bar" id="group-bar" style="display:none;">
+            <span class="group-bar-count" id="group-bar-count">0 selected</span>
+            <button class="group-btn g-preparing" id="group-preparing">⚡ Preparing</button>
+            <button class="group-btn g-available" id="group-available">✓ Available</button>
+            <button class="group-btn g-cancel" id="group-deselect">✕</button>
         </div>
         <div class="station-list" id="station-list"></div>
         <div class="add-form">

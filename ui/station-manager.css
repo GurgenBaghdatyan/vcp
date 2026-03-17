@@ -1393,3 +1393,122 @@ textarea.field {
         transform: none;
     }
 }
+/* ══════════════════════════════════════════════
+   GROUP SELECTION
+══════════════════════════════════════════════ */
+
+.select-all-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.select-all-wrap input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.select-all-label {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    color: var(--text3);
+    user-select: none;
+}
+
+.group-bar {
+    padding: 7px 10px;
+    background: var(--accent-dim);
+    border-bottom: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    animation: fadeIn .12s ease;
+}
+
+.group-bar-count {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.group-btn {
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid;
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .12s;
+    white-space: nowrap;
+}
+
+.group-btn:hover { opacity: .8; }
+
+.g-preparing {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: #000;
+}
+
+.g-available {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.g-cancel {
+    background: transparent;
+    border-color: var(--border2);
+    color: var(--text3);
+}
+
+/* checkbox inside station card */
+.station-cb {
+    width: 13px;
+    height: 13px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* group status badge on card */
+.station-group-status {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    animation: fadeIn .15s ease;
+}
+
+.sgs-ok {
+    color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+}
+
+.sgs-err {
+    color: var(--red);
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+}
+
+.sgs-pending {
+    color: var(--yellow);
+    background: transparent;
+    border: 1px solid var(--yellow);
+}
+
+.station-card.group-selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+}

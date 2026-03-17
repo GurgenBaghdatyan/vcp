@@ -30,33 +30,59 @@ async function renderStations() {
     document.getElementById("station-count").textContent = stations.length;
     const list = document.getElementById("station-list");
     list.innerHTML = "";
+    // rebuild card map preserving selected state & status badges
+    const prevSelected = new Set(selectedStations);
+    stationCardMap.clear();
+
     for (const s of stations) {
-        const connectors = await fetchConnectors(s.chargePointId);
+        const id = s.chargePointId;
+        const connectors = await fetchConnectors(id);
         const card = document.createElement("div");
-        card.className = "station-card" + (s.chargePointId === activeStation ? " active" : "");
+        const isSelected = prevSelected.has(id);
+        card.className = "station-card" +
+            (id === activeStation ? " active" : "") +
+            (isSelected ? " group-selected" : "");
         const badgesHtml = Object.entries(connectors).map(([cid, status]) => {
             const cls = STATUS_CLASS[status] || "cb-other";
             return `<span class="connector-badge ${cls}">#${cid} ${status}</span>`;
         }).join("");
         card.innerHTML = `
+                <input type="checkbox" class="station-cb" ${isSelected ? "checked" : ""}>
                 <div class="station-dot"></div>
                 <div class="station-info">
-                    <div class="station-id">${esc(s.chargePointId)}</div>
+                    <div class="station-id">${esc(id)}</div>
                     <div class="station-ep">${esc(s.endpoint)}</div>
                     ${badgesHtml ? `<div class="connector-badges">${badgesHtml}</div>` : ""}
                 </div>
                 <button class="btn-remove" title="Disconnect">✕</button>`;
+
+        const cb = card.querySelector(".station-cb");
+        cb.onchange = e => {
+            e.stopPropagation();
+            if (cb.checked) {
+                selectedStations.add(id);
+                card.classList.add("group-selected");
+            } else {
+                selectedStations.delete(id);
+                card.classList.remove("group-selected");
+            }
+            updateGroupBar();
+        };
         card.onclick = e => {
-            if (!e.target.classList.contains("btn-remove")) selectStation(s.chargePointId);
+            if (e.target.classList.contains("btn-remove") || e.target.classList.contains("station-cb")) return;
+            selectStation(id);
         };
         card.querySelector(".btn-remove").onclick = async e => {
             e.stopPropagation();
-            await fetch("/stations/" + encodeURIComponent(s.chargePointId), {method: "DELETE"});
-            if (activeStation === s.chargePointId) deselectStation();
+            await fetch("/stations/" + encodeURIComponent(id), {method: "DELETE"});
+            selectedStations.delete(id);
+            if (activeStation === id) deselectStation();
             renderStations();
         };
         list.appendChild(card);
+        stationCardMap.set(id, { el: card, statusEl: null });
     }
+    updateGroupBar();
 }
 
 function selectStation(id) {
@@ -397,3 +423,95 @@ fetchHealth();
 setInterval(renderStations, 5000);
 setInterval(fetchHealth, 10000);
 setInterval(fetchLogs, 2000);
+// ── Group selection ─────────────────────────────────────────────────────────
+let selectedStations = new Set();
+// map of chargePointId -> {el, statusEl} for live badge updates
+const stationCardMap = new Map();
+
+function updateGroupBar() {
+    const bar = document.getElementById("group-bar");
+    const countEl = document.getElementById("group-bar-count");
+    const n = selectedStations.size;
+    if (n === 0) {
+        bar.style.display = "none";
+    } else {
+        bar.style.display = "flex";
+        countEl.textContent = n + " selected";
+    }
+    // sync select-all checkbox state
+    const allCb = document.getElementById("select-all-cb");
+    const total = stationCardMap.size;
+    allCb.indeterminate = n > 0 && n < total;
+    allCb.checked = total > 0 && n === total;
+}
+
+function setStationGroupStatus(id, state, text) {
+    const entry = stationCardMap.get(id);
+    if (!entry) return;
+    let el = entry.statusEl;
+    if (!el) {
+        el = document.createElement("span");
+        el.className = "station-group-status";
+        entry.el.querySelector(".station-info").appendChild(el);
+        entry.statusEl = el;
+    }
+    el.className = "station-group-status " + (state === "ok" ? "sgs-ok" : state === "err" ? "sgs-err" : "sgs-pending");
+    el.textContent = text;
+    if (state !== "pending") {
+        setTimeout(() => { el.remove(); entry.statusEl = null; }, 3000);
+    }
+}
+
+async function sendGroupCommand(action, payload) {
+    const ids = [...selectedStations];
+    for (const id of ids) {
+        setStationGroupStatus(id, "pending", "…");
+        try {
+            const r = await fetch("/stations/" + encodeURIComponent(id) + "/execute", {
+                method: "POST", headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ action, payload }),
+            });
+            if (!r.ok) throw new Error(await r.text());
+            setStationGroupStatus(id, "ok", "✓ sent");
+        } catch (e) {
+            setStationGroupStatus(id, "err", "✕ err");
+        }
+    }
+}
+
+document.getElementById("group-preparing").onclick = () => {
+    sendGroupCommand("StatusNotification", { connectorId: 1, errorCode: "NoError", status: "Preparing" });
+};
+
+document.getElementById("group-available").onclick = () => {
+    sendGroupCommand("StatusNotification", { connectorId: 1, errorCode: "NoError", status: "Available" });
+};
+
+document.getElementById("group-deselect").onclick = () => {
+    selectedStations.clear();
+    stationCardMap.forEach(({ el }) => {
+        const cb = el.querySelector(".station-cb");
+        if (cb) cb.checked = false;
+        el.classList.remove("group-selected");
+    });
+    updateGroupBar();
+};
+
+document.getElementById("select-all-cb").onchange = function () {
+    if (this.checked) {
+        stationCardMap.forEach((entry, id) => {
+            selectedStations.add(id);
+            const cb = entry.el.querySelector(".station-cb");
+            if (cb) cb.checked = true;
+            entry.el.classList.add("group-selected");
+        });
+    } else {
+        selectedStations.clear();
+        stationCardMap.forEach(({ el }) => {
+            const cb = el.querySelector(".station-cb");
+            if (cb) cb.checked = false;
+            el.classList.remove("group-selected");
+        });
+    }
+    updateGroupBar();
+};
