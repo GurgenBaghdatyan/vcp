@@ -21,29 +21,44 @@ document.getElementById("tl-clear").onclick = () => {
     renderTimeline();
 };
 
+let sseReconnectTimer = null;
+let sseCurrentId = null;
+
 function connectTrafficSSE(id) {
+    if (sseReconnectTimer) { clearTimeout(sseReconnectTimer); sseReconnectTimer = null; }
+    sseCurrentId = id;
     if (trafficSSE) { trafficSSE.close(); trafficSSE = null; }
     trafficCache = [];
     expandedIds.clear();
     pendingNewCount = 0;
-    renderTimeline(); // clear DOM
+    renderTimeline();
+    _openTrafficSSE(id);
+}
 
+function _openTrafficSSE(id) {
+    if (sseCurrentId !== id) return;
     const es = new EventSource("/stations/" + encodeURIComponent(id) + "/traffic/stream");
     es.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        console.log("[SSE]", data.type, data);
+        let data;
+        try { data = JSON.parse(e.data); } catch { return; }
         if (data.type === "snapshot") {
             trafficCache = data.traffic || [];
-            renderTimeline(); // full render on snapshot
+            renderTimeline();
         } else if (data.type === "entry") {
             trafficCache.push(data.entry);
             if (trafficCache.length > 500) trafficCache.shift();
-            console.log("[SSE] calling appendTimelineEntry, trafficCache.length=", trafficCache.length);
             appendTimelineEntry(data.entry);
         }
-        document.getElementById("tl-count").textContent = trafficCache.length;
     };
-    es.onerror = () => {};
+    es.onerror = () => {
+        es.close();
+        trafficSSE = null;
+        if (sseCurrentId !== id) return;
+        sseReconnectTimer = setTimeout(() => {
+            sseReconnectTimer = null;
+            if (sseCurrentId === id) _openTrafficSSE(id);
+        }, 2000);
+    };
     trafficSSE = es;
 }
 
@@ -71,18 +86,33 @@ function makeTlRowHTML(entry) {
             </div>${isExpanded ? `<div class="tl-payload-row"><pre class="tl-payload-json">${esc(payloadJson)}</pre></div>` : ""}`;
 }
 
+function passesFilter(entry) {
+    if (tlFilter === "out" && entry.direction !== "out") return false;
+    if (tlFilter === "in" && entry.direction !== "in") return false;
+    if (tlFilter === "error" && entry.messageType !== "CallError") return false;
+    return true;
+}
+
+function updateTlCount() {
+    const count = tlFilter === "all"
+        ? trafficCache.length
+        : trafficCache.filter(passesFilter).length;
+    document.getElementById("tl-count").textContent = count;
+}
+
 function appendTimelineEntry(entry) {
     const scroll = document.getElementById("tl-scroll");
-    const empty = document.getElementById("tl-empty");
     const badge = document.getElementById("tl-new-badge");
 
-    // hide empty state
-    empty.style.display = "none";
+    // update count regardless of filter
+    updateTlCount();
 
     // check if entry passes current filter
-    if (tlFilter === "out" && entry.direction !== "out") return;
-    if (tlFilter === "in" && entry.direction !== "in") return;
-    if (tlFilter === "error" && entry.messageType !== "CallError") return;
+    if (!passesFilter(entry)) return;
+
+    // entry is visible — hide empty state (it lives outside scroll now)
+    _tlEmpty.style.display = "none";
+    if (_tlEmpty.parentNode) _tlEmpty.parentNode.removeChild(_tlEmpty);
 
     const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 60;
 
@@ -131,9 +161,12 @@ document.getElementById("tl-scroll").addEventListener("scroll", () => {
     }
 });
 
+// Keep tl-empty outside scroll so innerHTML="" never destroys it
+const _tlEmpty = document.getElementById("tl-empty");
+_tlEmpty.parentNode.removeChild(_tlEmpty);
+
 function renderTimeline() {
     const scroll = document.getElementById("tl-scroll");
-    const empty = document.getElementById("tl-empty");
     const badge = document.getElementById("tl-new-badge");
     pendingNewCount = 0;
     badge.style.display = "none";
@@ -144,15 +177,16 @@ function renderTimeline() {
     if (tlFilter === "error") entries = entries.filter(e => e.messageType === "CallError");
     entries = entries.slice(-200);
 
-    document.getElementById("tl-count").textContent = trafficCache.length;
+    document.getElementById("tl-count").textContent = entries.length;
 
+    scroll.innerHTML = "";
     if (entries.length === 0) {
-        scroll.innerHTML = "";
-        scroll.appendChild(empty);
-        empty.style.display = "flex";
+        scroll.appendChild(_tlEmpty);
+        _tlEmpty.style.display = "flex";
         return;
     }
-    empty.style.display = "none";
+    _tlEmpty.style.display = "none";
+    if (_tlEmpty.parentNode) _tlEmpty.parentNode.removeChild(_tlEmpty);
     scroll.innerHTML = entries.map(makeTlRowHTML).join("");
     scroll.scrollTop = scroll.scrollHeight;
 }
