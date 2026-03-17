@@ -209,4 +209,21 @@ adminApi.get("/ui", (c) => {
     return c.html(html);
 });
 
+const MIME: Record<string, string> = {
+    ".js":   "application/javascript",
+    ".css":  "text/css",
+    ".html": "text/html",
+    ".json": "application/json",
+};
+
+adminApi.get("/ui/:file", (c) => {
+    const file = c.req.param("file");
+    const filePath = path.join(__dirname, "ui", file);
+    if (!fs.existsSync(filePath)) return c.text("Not found", 404);
+    const ext = path.extname(file);
+    const mime = MIME[ext] ?? "application/octet-stream";
+    const content = fs.readFileSync(filePath);
+    return c.body(content, 200, { "Content-Type": mime });
+});
+
 serve({fetch: adminApi.fetch, port: adminPort});
