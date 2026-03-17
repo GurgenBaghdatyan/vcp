@@ -497,6 +497,41 @@
             gap: 6px;
         }
 
+        .add-mode-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--surface3);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 5px 0;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text2);
+            font-family: var(--sans), serif;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: background .15s, color .15s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        #panel-single, #panel-batch {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
         .field {
             width: 100%;
             padding: 7px 10px;
@@ -1061,6 +1096,37 @@
             border-radius: 99px;
         }
 
+        .tl-new-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #fff;
+            font-family: var(--mono), serif;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 2px 12px rgba(0,0,0,.4);
+            z-index: 10;
+            white-space: nowrap;
+            border: none;
+            transition: opacity .15s;
+        }
+
+        .tl-new-badge:hover { opacity: .85; }
+
+        .tl-scroll-wrap {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
         .tl-clear {
             margin-left: auto;
             padding: 3px 10px;
@@ -1368,12 +1434,41 @@
         </div>
         <div class="station-list" id="station-list"></div>
         <div class="add-form">
-            <div class="section-label" style="padding-bottom:4px;">Add Station</div>
-            <label for="new-id"></label><input id="new-id" class="field" placeholder="Charge Point ID"/>
-            <label for="new-endpoint"></label><input id="new-endpoint" class="field" placeholder="Endpoint (optional)"/>
-            <label for="new-password"></label><input id="new-password" class="field" type="password"
-                                                     placeholder="Password (optional)"/>
-            <button class="btn-primary" id="btn-add">+ Connect Station</button>
+            <div class="section-label" style="padding-bottom:6px;">Add Station</div>
+
+            <!-- Mode toggle -->
+            <div class="add-mode-toggle">
+                <button class="mode-btn active" id="mode-single">Single</button>
+                <button class="mode-btn" id="mode-batch">Batch</button>
+            </div>
+
+            <!-- SINGLE mode -->
+            <div id="panel-single">
+                <label for="new-id"></label><input id="new-id" class="field" placeholder="Charge Point ID"/>
+                <label for="new-endpoint"></label><input id="new-endpoint" class="field" placeholder="Endpoint (optional)"/>
+                <label for="new-password"></label><input id="new-password" class="field" type="password" placeholder="Password (optional)"/>
+                <button class="btn-primary" id="btn-add" style="margin-top:2px;">+ Connect Station</button>
+            </div>
+
+            <!-- BATCH mode -->
+            <div id="panel-batch" style="display:none;">
+                <div style="font-family:var(--mono),serif;font-size:10px;color:var(--text3);margin-bottom:4px;">One ID per line</div>
+                <label for="batch-ids"></label><textarea id="batch-ids" class="field" rows="5" placeholder="CP001&#10;CP002&#10;CP003" style="resize:vertical;"></textarea>
+                <label for="batch-endpoint"></label><input id="batch-endpoint" class="field" placeholder="Endpoint (optional, overrides default)"/>
+                <label for="batch-password"></label><input id="batch-password" class="field" type="password" placeholder="Password (optional)"/>
+                <button class="btn-primary" id="btn-batch" style="margin-top:2px;">⚡ Connect All</button>
+                <div id="batch-progress" style="display:none;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-family:var(--mono),serif;font-size:10px;color:var(--text2);" id="batch-status-text">Connecting…</span>
+                        <span style="font-family:var(--mono),serif;font-size:10px;color:var(--text3);" id="batch-counter">0/0</span>
+                    </div>
+                    <div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;">
+                        <div id="batch-bar" style="height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .2s;"></div>
+                    </div>
+                    <div id="batch-errors" style="margin-top:6px;font-family:var(--mono),serif;font-size:10px;color:var(--red);max-height:60px;overflow-y:auto;"></div>
+                </div>
+            </div>
+
             <div class="form-msg" id="add-msg"></div>
         </div>
     </div>
@@ -1439,10 +1534,13 @@
                         </div>
                         <button class="tl-clear" id="tl-clear">Clear</button>
                     </div>
-                    <div class="tl-scroll" id="tl-scroll">
-                        <div class="empty-state" id="tl-empty" style="height:100%;min-height:120px;">
-                            <div class="empty-icon" style="font-size:20px;">📡</div>
-                            <div class="empty-label">No traffic yet — send a message</div>
+                    <div class="tl-scroll-wrap">
+                        <button class="tl-new-badge" id="tl-new-badge"></button>
+                        <div class="tl-scroll" id="tl-scroll">
+                            <div class="empty-state" id="tl-empty" style="height:100%;min-height:120px;">
+                                <div class="empty-icon" style="font-size:20px;">📡</div>
+                                <div class="empty-label">No traffic yet — send a message</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1522,7 +1620,14 @@
             document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
             btn.classList.add("active");
             document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
-            if (btn.dataset.tab === "timeline" && activeStation) renderTimeline();
+            if (btn.dataset.tab === "timeline" && activeStation) {
+                // flush any pending-count and scroll to bottom without re-render
+                const scroll = document.getElementById("tl-scroll");
+                const badge = document.getElementById("tl-new-badge");
+                pendingNewCount = 0;
+                badge.style.display = "none";
+                scroll.scrollTop = scroll.scrollHeight;
+            }
         });
     });
 
@@ -1780,27 +1885,28 @@
     };
 
     function connectTrafficSSE(id) {
-        if (trafficSSE) {
-            trafficSSE.close();
-            trafficSSE = null;
-        }
+        if (trafficSSE) { trafficSSE.close(); trafficSSE = null; }
         trafficCache = [];
         expandedIds.clear();
+        pendingNewCount = 0;
+        renderTimeline(); // clear DOM
+
         const es = new EventSource("/stations/" + encodeURIComponent(id) + "/traffic/stream");
         es.onmessage = (e) => {
             const data = JSON.parse(e.data);
             if (data.type === "snapshot") {
                 trafficCache = data.traffic || [];
+                renderTimeline(); // full render on snapshot
             } else if (data.type === "entry") {
                 trafficCache.push(data.entry);
                 if (trafficCache.length > 500) trafficCache.shift();
+                const isActive = document.getElementById("tab-timeline").classList.contains("active");
+                if (isActive) appendTimelineEntry(data.entry);
+                else pendingNewCount++;
             }
             document.getElementById("tl-count").textContent = trafficCache.length;
-            // only re-render if timeline tab is active
-            if (document.getElementById("tab-timeline").classList.contains("active")) renderTimeline();
         };
-        es.onerror = () => {
-        };
+        es.onerror = () => {};
         trafficSSE = es;
     }
 
@@ -1808,9 +1914,95 @@
         return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
+    function makeTlRowHTML(entry) {
+        const ts = (entry.timestamp || "").replace("T", " ").slice(11, 19);
+        const isOut = entry.direction === "out";
+        const isErr = entry.messageType === "CallError";
+        const dirCls = isErr ? "tl-dir-err" : isOut ? "tl-dir-out" : "tl-dir-in";
+        const dirSymbol = isErr ? "✕" : isOut ? "↗" : "↙";
+        const typeCls = isErr ? "tb-error" : entry.messageType === "CallResult" ? "tb-result" : "tb-call";
+        const typeLabel = isErr ? "err" : entry.messageType === "CallResult" ? "res" : "req";
+        const action = entry.action || (isErr ? `${entry.errorCode}` : "—");
+        const isExpanded = expandedIds.has(entry.id);
+        const payloadJson = JSON.stringify(entry.payload, null, 2);
+        return `<div class="tl-row${isExpanded ? " expanded" : ""}" data-tl-id="${esc(entry.id)}" onclick="toggleTlRow('${esc(entry.id)}')">
+                <span class="tl-ts">${ts}</span>
+                <span class="${dirCls}">${dirSymbol}</span>
+                <span class="tl-type-badge ${typeCls}">${typeLabel}</span>
+                <span class="tl-action">${esc(action)}</span>
+                <span class="tl-arrow">${isExpanded ? "▲" : "▼"}</span>
+            </div>${isExpanded ? `<div class="tl-payload-row"><pre class="tl-payload-json">${esc(payloadJson)}</pre></div>` : ""}`;
+    }
+
+    let pendingNewCount = 0;
+
+    function appendTimelineEntry(entry) {
+        const scroll = document.getElementById("tl-scroll");
+        const empty = document.getElementById("tl-empty");
+        const badge = document.getElementById("tl-new-badge");
+
+        // hide empty state
+        empty.style.display = "none";
+
+        // check if entry passes current filter
+        if (tlFilter === "out" && entry.direction !== "out") return;
+        if (tlFilter === "in" && entry.direction !== "in") return;
+        if (tlFilter === "error" && entry.messageType !== "CallError") return;
+
+        const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 60;
+
+        const tmp = document.createElement("div");
+        tmp.innerHTML = makeTlRowHTML(entry);
+        while (tmp.firstChild) scroll.appendChild(tmp.firstChild);
+
+        // cap DOM rows at 200
+        const rows = scroll.querySelectorAll(".tl-row");
+        if (rows.length > 200) {
+            let toRemove = rows.length - 200;
+            for (let i = 0; i < toRemove; i++) {
+                const row = rows[i];
+                // also remove payload if expanded
+                if (row.nextSibling && row.nextSibling.classList && row.nextSibling.classList.contains("tl-payload-row")) {
+                    row.nextSibling.remove();
+                }
+                row.remove();
+            }
+        }
+
+        if (atBottom) {
+            scroll.scrollTop = scroll.scrollHeight;
+            badge.style.display = "none";
+            pendingNewCount = 0;
+        } else {
+            pendingNewCount++;
+            badge.textContent = `↓ ${pendingNewCount} new message${pendingNewCount > 1 ? "s" : ""}`;
+            badge.style.display = "";
+        }
+    }
+
+    // scroll-to-bottom badge click
+    document.getElementById("tl-new-badge").onclick = () => {
+        const scroll = document.getElementById("tl-scroll");
+        scroll.scrollTo({top: scroll.scrollHeight, behavior: "smooth"});
+    };
+
+    // hide badge when user manually scrolls to bottom
+    document.getElementById("tl-scroll").addEventListener("scroll", () => {
+        const scroll = document.getElementById("tl-scroll");
+        const badge = document.getElementById("tl-new-badge");
+        if (scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 30) {
+            badge.style.display = "none";
+            pendingNewCount = 0;
+        }
+    });
+
     function renderTimeline() {
         const scroll = document.getElementById("tl-scroll");
         const empty = document.getElementById("tl-empty");
+        const badge = document.getElementById("tl-new-badge");
+        pendingNewCount = 0;
+        badge.style.display = "none";
+
         let entries = trafficCache;
         if (tlFilter === "out") entries = entries.filter(e => e.direction === "out");
         if (tlFilter === "in") entries = entries.filter(e => e.direction === "in");
@@ -1826,34 +2018,26 @@
             return;
         }
         empty.style.display = "none";
-
-        const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 40;
-        scroll.innerHTML = entries.map(entry => {
-            const ts = (entry.timestamp || "").replace("T", " ").slice(11, 19);
-            const isOut = entry.direction === "out";
-            const isErr = entry.messageType === "CallError";
-            const dirCls = isErr ? "tl-dir-err" : isOut ? "tl-dir-out" : "tl-dir-in";
-            const dirSymbol = isErr ? "✕" : isOut ? "↗" : "↙";
-            const typeCls = isErr ? "tb-error" : entry.messageType === "CallResult" ? "tb-result" : "tb-call";
-            const typeLabel = isErr ? "err" : entry.messageType === "CallResult" ? "res" : "req";
-            const action = entry.action || (isErr ? `${entry.errorCode}` : "—");
-            const isExpanded = expandedIds.has(entry.id);
-            const payloadJson = JSON.stringify(entry.payload, null, 2);
-            return `<div class="tl-row${isExpanded ? " expanded" : ""}" data-tl-id="${esc(entry.id)}" onclick="toggleTlRow('${esc(entry.id)}')">
-                <span class="tl-ts">${ts}</span>
-                <span class="${dirCls}">${dirSymbol}</span>
-                <span class="tl-type-badge ${typeCls}">${typeLabel}</span>
-                <span class="tl-action">${esc(action)}</span>
-                <span class="tl-arrow">${isExpanded ? "▲" : "▼"}</span>
-            </div>${isExpanded ? `<div class="tl-payload-row"><pre class="tl-payload-json">${esc(payloadJson)}</pre></div>` : ""}`;
-        }).join("");
-        if (atBottom) scroll.scrollTop = scroll.scrollHeight;
+        scroll.innerHTML = entries.map(makeTlRowHTML).join("");
+        scroll.scrollTop = scroll.scrollHeight;
     }
 
     window.toggleTlRow = function (id) {
         if (expandedIds.has(id)) expandedIds.delete(id);
         else expandedIds.add(id);
-        renderTimeline();
+        // re-render only the clicked row in place to avoid scroll jump
+        const scroll = document.getElementById("tl-scroll");
+        const rowEl = scroll.querySelector(`[data-tl-id="${id}"]`);
+        if (!rowEl) { renderTimeline(); return; }
+        const entry = trafficCache.find(e => e.id === id);
+        if (!entry) return;
+        const tmp = document.createElement("div");
+        tmp.innerHTML = makeTlRowHTML(entry);
+        // remove old payload row if present
+        if (rowEl.nextSibling && rowEl.nextSibling.classList && rowEl.nextSibling.classList.contains("tl-payload-row")) {
+            rowEl.nextSibling.remove();
+        }
+        rowEl.replaceWith(...tmp.childNodes);
     };
 
     // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1954,15 +2138,29 @@
         searchClear.style.display = "none";
     }
 
+    // ── Mode toggle ────────────────────────────────────────────────
+    document.getElementById("mode-single").onclick = () => {
+        document.getElementById("mode-single").classList.add("active");
+        document.getElementById("mode-batch").classList.remove("active");
+        document.getElementById("panel-single").style.display = "";
+        document.getElementById("panel-batch").style.display = "none";
+        document.getElementById("add-msg").textContent = "";
+    };
+    document.getElementById("mode-batch").onclick = () => {
+        document.getElementById("mode-batch").classList.add("active");
+        document.getElementById("mode-single").classList.remove("active");
+        document.getElementById("panel-single").style.display = "none";
+        document.getElementById("panel-batch").style.display = "";
+        document.getElementById("add-msg").textContent = "";
+    };
+
+    // ── Single add ────────────────────────────────────────────────
     document.getElementById("btn-add").onclick = async () => {
         const id = document.getElementById("new-id").value.trim();
         const ep = document.getElementById("new-endpoint").value.trim();
         const pw = document.getElementById("new-password").value.trim();
         const msg = document.getElementById("add-msg");
-        if (!id) {
-            setMsg(msg, "Charge Point ID required", false);
-            return;
-        }
+        if (!id) { setMsg(msg, "Charge Point ID required", false); return; }
         setMsg(msg, "Connecting…", null);
         try {
             const d = await fetch("/stations", {
@@ -1977,8 +2175,59 @@
             } else {
                 setMsg(msg, d.error || "Failed", false);
             }
-        } catch (e) {
-            setMsg(msg, e.message, false);
+        } catch (e) { setMsg(msg, e.message, false); }
+    };
+
+    // ── Batch add ────────────────────────────────────────────────
+    document.getElementById("btn-batch").onclick = async () => {
+        const raw = document.getElementById("batch-ids").value;
+        const ep  = document.getElementById("batch-endpoint").value.trim();
+        const pw  = document.getElementById("batch-password").value.trim();
+        const msg = document.getElementById("add-msg");
+
+        const ids = raw.split("\n").map(s => s.trim()).filter(Boolean);
+        if (ids.length === 0) { setMsg(msg, "Enter at least one ID", false); return; }
+
+        const progress  = document.getElementById("batch-progress");
+        const bar       = document.getElementById("batch-bar");
+        const counter   = document.getElementById("batch-counter");
+        const statusTxt = document.getElementById("batch-status-text");
+        const errBox    = document.getElementById("batch-errors");
+
+        progress.style.display = "";
+        bar.style.background = "var(--accent)";
+        bar.style.width = "0%";
+        errBox.textContent = "";
+        document.getElementById("btn-batch").disabled = true;
+        setMsg(msg, "", null);
+
+        let done = 0, failed = 0;
+        const errors = [];
+
+        for (const id of ids) {
+            statusTxt.textContent = `Connecting ${id}…`;
+            counter.textContent   = `${done}/${ids.length}`;
+            try {
+                const d = await fetch("/stations", {
+                    method: "POST", headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({chargePointId: id, endpoint: ep || undefined, password: pw || undefined}),
+                }).then(r => r.json());
+                if (!d.ok) { failed++; errors.push(`✗ ${id}: ${d.error || "failed"}`); }
+            } catch (e) { failed++; errors.push(`✗ ${id}: ${e.message}`); }
+            done++;
+            bar.style.width = `${Math.round((done / ids.length) * 100)}%`;
+            counter.textContent = `${done}/${ids.length}`;
+            errBox.textContent = errors.join("\n");
+            renderStations();
+        }
+
+        const ok = done - failed;
+        statusTxt.textContent = `Done — ${ok} connected, ${failed} failed`;
+        bar.style.background = failed === 0 ? "var(--green)" : failed === done ? "var(--red)" : "var(--yellow)";
+        document.getElementById("btn-batch").disabled = false;
+        if (failed === 0) {
+            document.getElementById("batch-ids").value = "";
+            setTimeout(() => { progress.style.display = "none"; bar.style.width = "0%"; bar.style.background = "var(--accent)"; }, 3000);
         }
     };
 
