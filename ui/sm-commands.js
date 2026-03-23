@@ -1,4 +1,7 @@
 // Quick commands + Fault injection + MeterValues live control
+// Declared up top so get payload() getters can reference them at click time
+let mvActiveTxId   = null;
+let _mvMeterValue  = 0;
 // ── Commands ───────────────────────────────────────────────────────────────
 const COMMANDS = [
     {
@@ -36,10 +39,10 @@ const COMMANDS = [
     {
         label: "StopTx", action: "StopTransaction", get payload() {
             return {
-                transactionId: 1,
-                meterStop: 100,
+                transactionId: mvActiveTxId ?? 0,
+                meterStop: _mvMeterValue ?? 0,
                 timestamp: new Date().toISOString(),
-                reason: "Remote",
+                reason: "Local",
                 idTag: "AABBCCDD"
             };
         }
@@ -129,7 +132,6 @@ const mvIntValue  = document.getElementById("mv-interval-value");
 const mvApplyBtn  = document.getElementById("mv-apply-btn");
 const mvApplySt   = document.getElementById("mv-apply-status");
 
-let mvActiveTxId  = null;
 let mvPollTimer   = null;
 
 function mvFormatWh(wh) {
@@ -212,6 +214,7 @@ async function mvPoll() {
             const tx = txList[0];
             const firstLoad = mvActiveTxId === null;
             mvActiveTxId = tx.transactionId;
+            _mvMeterValue = tx.meterValue;
             mvNoTx.style.display = "none";
             mvPanel.style.display = "";
             mvTxId.textContent = tx.transactionId;
