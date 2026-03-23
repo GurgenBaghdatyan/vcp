@@ -94,13 +94,7 @@ function selectStation(id) {
     fetchLogs();
     connectTrafficSSE(id);
     renderStations();
-    // reset sim
-    if (simInterval) {
-        clearInterval(simInterval);
-        simInterval = null;
-        simBtn.textContent = "▶ Start Charging Sim";
-        simBtn.classList.remove("running");
-    }
+    if (window.mvOnSelectStation) window.mvOnSelectStation(id);
 }
 
 function deselectStation() {
@@ -109,6 +103,7 @@ function deselectStation() {
         trafficSSE.close();
         trafficSSE = null;
     }
+    if (window.mvOnDeselectStation) window.mvOnDeselectStation();
     document.getElementById("empty-state").style.display = "flex";
     document.getElementById("detail-content").style.display = "none";
     document.getElementById("log-scroll").innerHTML = "";

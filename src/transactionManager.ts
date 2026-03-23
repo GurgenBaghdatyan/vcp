@@ -1,16 +1,19 @@
 import type { VCP } from "./vcp";
 
-const METER_VALUES_INTERVAL_SEC = 15;
-
 type TransactionId = string | number;
 
-interface TransactionState {
+export interface TransactionState {
   startedAt: Date;
   idTag: string;
   transactionId: TransactionId;
+  /** Accumulated energy in Wh */
   meterValue: number;
   evseId?: number;
   connectorId: number;
+  /** Wh added per minute — changeable at runtime */
+  whPerMinute: number;
+  /** MeterValues send interval in seconds — changeable at runtime */
+  intervalSec: number;
 }
 
 interface StartTransactionProps {
@@ -21,54 +24,114 @@ interface StartTransactionProps {
   meterValuesCallback: (transactionState: TransactionState) => Promise<void>;
 }
 
-export class TransactionManager {
-  transactions: Map<
-    TransactionId,
-    TransactionState & { meterValuesTimer: NodeJS.Timer }
-  > = new Map();
+const DEFAULT_WH_PER_MINUTE = 600;
+const DEFAULT_INTERVAL_SEC  = 15;
 
-  canStartNewTransaction(connectorId: number) {
-    return !Array.from(this.transactions.values()).some(
-      (transaction) => transaction.connectorId === connectorId,
+type InternalEntry = TransactionState & {
+  meterValuesTimer: ReturnType<typeof setInterval>;
+  meterValuesCallback: (s: TransactionState) => Promise<void>;
+};
+
+export class TransactionManager {
+  private _entries: Map<TransactionId, InternalEntry> = new Map();
+
+  /** Public read-only view used by external code */
+  get transactions(): Map<TransactionId, TransactionState & { meterValuesTimer: ReturnType<typeof setInterval> }> {
+    return this._entries as any;
+  }
+
+  canStartNewTransaction(connectorId: number): boolean {
+    return !Array.from(this._entries.values()).some(
+        (t) => t.connectorId === connectorId,
     );
   }
 
-  startTransaction(vcp: VCP, startTransactionProps: StartTransactionProps) {
-    const meterValuesTimer = setInterval(() => {
-      const currentTransactionState = this.transactions.get(
-        startTransactionProps.transactionId,
-      )!;
-      const { meterValuesTimer, ...currentTransaction } =
-        currentTransactionState;
-      startTransactionProps.meterValuesCallback({
-        ...currentTransaction,
-        meterValue: this.getMeterValue(startTransactionProps.transactionId),
-      });
-    }, METER_VALUES_INTERVAL_SEC * 1000);
-    this.transactions.set(startTransactionProps.transactionId, {
-      transactionId: startTransactionProps.transactionId,
-      idTag: startTransactionProps.idTag,
-      meterValue: 0,
-      startedAt: new Date(),
-      evseId: startTransactionProps.evseId,
-      connectorId: startTransactionProps.connectorId,
-      meterValuesTimer: meterValuesTimer,
+  startTransaction(_vcp: VCP, props: StartTransactionProps): void {
+    const intervalSec = DEFAULT_INTERVAL_SEC;
+    const whPerMinute = DEFAULT_WH_PER_MINUTE;
+
+    const state: TransactionState = {
+      transactionId: props.transactionId,
+      idTag:         props.idTag,
+      meterValue:    0,
+      startedAt:     new Date(),
+      evseId:        props.evseId,
+      connectorId:   props.connectorId,
+      whPerMinute,
+      intervalSec,
+    };
+
+    const timer = this._makeTimer(props.transactionId, props.meterValuesCallback);
+
+    this._entries.set(props.transactionId, {
+      ...state,
+      meterValuesTimer:    timer,
+      meterValuesCallback: props.meterValuesCallback,
     });
   }
 
-  stopTransaction(transactionId: TransactionId) {
-    const transaction = this.transactions.get(transactionId);
-    if (transaction?.meterValuesTimer) {
-      clearInterval(transaction.meterValuesTimer);
-    }
-    this.transactions.delete(transactionId);
+  /**
+   * Change whPerMinute and/or intervalSec on an active transaction.
+   * Restarts the timer so the new interval takes effect on the next tick.
+   * Returns false if the transaction doesn't exist.
+   */
+  updateMeterConfig(
+      transactionId: TransactionId,
+      patch: { whPerMinute?: number; intervalSec?: number },
+  ): boolean {
+    const entry = this._entries.get(transactionId);
+    if (!entry) return false;
+
+    clearInterval(entry.meterValuesTimer);
+
+    if (patch.whPerMinute !== undefined) entry.whPerMinute = patch.whPerMinute;
+    if (patch.intervalSec !== undefined) entry.intervalSec  = patch.intervalSec;
+
+    entry.meterValuesTimer = this._makeTimer(transactionId, entry.meterValuesCallback);
+    return true;
   }
 
-  getMeterValue(transactionId: TransactionId) {
-    const transaction = this.transactions.get(transactionId);
-    if (!transaction) {
-      return 0;
+  stopTransaction(transactionId: TransactionId): void {
+    const entry = this._entries.get(transactionId);
+    if (entry) {
+      clearInterval(entry.meterValuesTimer);
+      this._entries.delete(transactionId);
     }
-    return (new Date().getTime() - transaction.startedAt.getTime()) / 100;
+  }
+
+  getMeterValue(transactionId: TransactionId): number {
+    return this._entries.get(transactionId)?.meterValue ?? 0;
+  }
+
+  /** Plain snapshot of all active transactions (no internal fields). */
+  getActiveTransactions(): TransactionState[] {
+    return Array.from(this._entries.values()).map(
+        ({ meterValuesTimer: _t, meterValuesCallback: _c, ...rest }) => rest,
+    );
+  }
+
+  // ── private ──────────────────────────────────────────────────────────────
+
+  private _makeTimer(
+      transactionId: TransactionId,
+      callback: (s: TransactionState) => Promise<void>,
+  ): ReturnType<typeof setInterval> {
+    // Read intervalSec lazily so the first tick uses the current value
+    const getEntry = () => this._entries.get(transactionId);
+
+    const fire = () => {
+      const entry = getEntry();
+      if (!entry) return;
+
+      // Wh per tick = (whPerMinute / 60) × intervalSec
+      const whPerTick = (entry.whPerMinute / 60) * entry.intervalSec;
+      entry.meterValue = Math.round(entry.meterValue + whPerTick);
+
+      const { meterValuesTimer: _t, meterValuesCallback: _c, ...snapshot } = entry;
+      callback({ ...snapshot });
+    };
+
+    const entry = getEntry();
+    return setInterval(fire, (entry?.intervalSec ?? DEFAULT_INTERVAL_SEC) * 1000);
   }
 }

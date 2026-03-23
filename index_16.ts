@@ -204,6 +204,50 @@ adminApi.get("/stations/:id/state", (c) => {
     });
 });
 
+// ── Meter config ─────────────────────────────────────────────────────────────
+adminApi.get("/stations/:id/meter-config", (c) => {
+    const id = c.req.param("id");
+    const entry = stations.get(id);
+    if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+
+    const transactions = entry.vcp.transactionManager.getActiveTransactions();
+    return c.json({
+        ok: true,
+        transactions: transactions.map(t => ({
+            transactionId: t.transactionId,
+            connectorId:   t.connectorId,
+            idTag:         t.idTag,
+            meterValue:    t.meterValue,
+            whPerMinute:   t.whPerMinute,
+            intervalSec:   t.intervalSec,
+            startedAt:     t.startedAt,
+        })),
+    });
+});
+
+adminApi.post(
+    "/stations/:id/meter-config",
+    zValidator("json", z.object({
+        transactionId: z.union([z.string(), z.number()]),
+        whPerMinute:   z.number().int().min(1).max(600_000).optional(),
+        intervalSec:   z.number().int().min(5).max(3600).optional(),
+    })),
+    (c) => {
+        const id = c.req.param("id");
+        const entry = stations.get(id);
+        if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+
+        const { transactionId, whPerMinute, intervalSec } = c.req.valid("json");
+        const updated = entry.vcp.transactionManager.updateMeterConfig(
+            transactionId,
+            { whPerMinute, intervalSec },
+        );
+
+        if (!updated) return c.json({ok: false, error: "Transaction not found"}, 404);
+        return c.json({ok: true});
+    },
+);
+
 adminApi.get("/ui", (c) => {
     const html = fs.readFileSync(path.join(__dirname, "ui/station-manager.html"), "utf-8");
     return c.html(html);

@@ -1343,6 +1343,97 @@ textarea.field {
     flex-wrap: wrap;
 }
 
+
+/* ── Charging speed controls ─────────────────────────────── */
+.sim-speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.sim-speed-label {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    white-space: nowrap;
+    min-width: 36px;
+}
+
+.sim-power-slider {
+    flex: 1;
+    min-width: 80px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface3);
+    outline: none;
+    cursor: pointer;
+}
+.sim-power-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor: pointer;
+    transition: transform .1s;
+}
+.sim-power-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.sim-power-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+}
+
+.sim-power-value {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 54px;
+    text-align: right;
+}
+
+.sim-speed-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.sim-preset-btn {
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text3);
+    font-size: 10px;
+    font-family: var(--mono), serif;
+    cursor: pointer;
+    transition: all .1s;
+}
+.sim-preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.sim-preset-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 600;
+}
+
 .charging-sim-btn {
     padding: 7px 14px;
     border-radius: var(--radius-sm);
@@ -1373,6 +1464,158 @@ textarea.field {
     font-size: 11px;
     color: var(--text3);
 }
+
+
+/* ── MeterValues live control ─────────────────────────────── */
+.mv-no-tx {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+    color: var(--text3);
+    padding: 10px 0;
+}
+
+.mv-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mv-tx-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border1);
+}
+.mv-tx-label {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+.mv-tx-id {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+}
+.mv-tx-wh {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+}
+
+.mv-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.mv-label {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    min-width: 48px;
+}
+.mv-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface3);
+    outline: none;
+    cursor: pointer;
+}
+.mv-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor: pointer;
+    transition: transform .1s;
+}
+.mv-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.mv-slider::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+}
+.mv-value {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 72px;
+    text-align: right;
+}
+
+.mv-presets, .mv-interval-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: 58px;
+}
+.mv-preset-btn, .mv-ipreset-btn {
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text3);
+    font-size: 10px;
+    font-family: var(--mono), serif;
+    cursor: pointer;
+    transition: all .1s;
+}
+.mv-preset-btn:hover, .mv-ipreset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.mv-preset-btn.active, .mv-ipreset-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.mv-apply-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+}
+.mv-apply-btn {
+    padding: 7px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 11px;
+    font-family: var(--mono), serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .12s;
+}
+.mv-apply-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+}
+.mv-apply-status {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+}
+.mv-apply-status.ok  { color: var(--green); }
+.mv-apply-status.err { color: var(--red); }
 
 ::-webkit-scrollbar-track {
     background: transparent;

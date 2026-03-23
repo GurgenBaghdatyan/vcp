@@ -102,6 +102,7 @@
                     <button class="tab-btn active" data-tab="commands">Commands</button>
                     <button class="tab-btn" data-tab="timeline">Timeline</button>
                     <button class="tab-btn" data-tab="faults">Fault Injection</button>
+                    <button class="tab-btn" data-tab="meter">MeterValues</button>
                 </div>
 
                 <!-- Commands tab -->
@@ -162,20 +163,65 @@
                     </div>
                 </div>
 
+                <!-- MeterValues tab -->
+                <div class="tab-panel" id="tab-meter" style="overflow-y:auto;">
+                    <div style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+                        <div class="panel">
+                            <div class="panel-header"><span class="panel-title">MeterValues Control</span></div>
+                            <div class="panel-body">
+                                <div id="mv-no-tx" class="mv-no-tx">
+                                    No active transaction — waiting for RemoteStartTransaction from CSMS
+                                </div>
+                                <div id="mv-panel" class="mv-panel" style="display:none;">
+                                    <div class="mv-tx-info">
+                                        <span class="mv-tx-label">txId</span>
+                                        <span class="mv-tx-id" id="mv-tx-id">—</span>
+                                        <span class="mv-tx-label" style="margin-left:12px;">Accumulated</span>
+                                        <span class="mv-tx-wh" id="mv-tx-wh">0 Wh</span>
+                                    </div>
+                                    <div class="mv-row">
+                                        <label class="mv-label" for="mv-wh">Speed</label>
+                                        <input type="range" id="mv-wh" class="mv-slider"
+                                               min="60" max="120000" step="60" value="600"/>
+                                        <span class="mv-value" id="mv-wh-value">600 Wh/min</span>
+                                    </div>
+                                    <div class="mv-presets">
+                                        <button class="mv-preset-btn" data-wh="60">60</button>
+                                        <button class="mv-preset-btn" data-wh="120">120</button>
+                                        <button class="mv-preset-btn active" data-wh="600">600</button>
+                                        <button class="mv-preset-btn" data-wh="1200">1.2k</button>
+                                        <button class="mv-preset-btn" data-wh="3000">3k</button>
+                                        <button class="mv-preset-btn" data-wh="6000">6k</button>
+                                        <button class="mv-preset-btn" data-wh="12000">12k</button>
+                                    </div>
+                                    <div class="mv-row" style="margin-top:8px;">
+                                        <label class="mv-label" for="mv-interval">Interval</label>
+                                        <input type="range" id="mv-interval" class="mv-slider"
+                                               min="5" max="300" step="5" value="15"/>
+                                        <span class="mv-value" id="mv-interval-value">15 s</span>
+                                    </div>
+                                    <div class="mv-interval-presets">
+                                        <button class="mv-ipreset-btn active" data-sec="15">15s</button>
+                                        <button class="mv-ipreset-btn" data-sec="30">30s</button>
+                                        <button class="mv-ipreset-btn" data-sec="60">60s</button>
+                                        <button class="mv-ipreset-btn" data-sec="120">120s</button>
+                                    </div>
+                                    <div class="mv-apply-row">
+                                        <button class="mv-apply-btn" id="mv-apply-btn">Apply</button>
+                                        <span class="mv-apply-status" id="mv-apply-status"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Fault Injection tab -->
                 <div class="tab-panel" id="tab-faults" style="overflow-y:auto;">
                     <div class="fault-panel-body">
                         <div>
                             <div class="fault-section-title">Error Codes</div>
                             <div class="fault-grid" id="fault-grid"></div>
-                        </div>
-                        <div>
-                            <div class="fault-section-title" style="margin-bottom:8px;">Charging Simulation</div>
-                            <div class="charging-sim-row">
-                                <button class="charging-sim-btn" id="sim-btn">▶ Start Charging Sim</button>
-                                <span class="sim-info"
-                                      id="sim-info">Sends MeterValues every 30s with increasing energy</span>
-                            </div>
                         </div>
                         <div>
                             <div class="fault-section-title" style="margin-bottom:8px;">Recover</div>
