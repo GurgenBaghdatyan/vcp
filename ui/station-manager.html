@@ -16,7 +16,6 @@
         <div class="logo-text">OCPP <span>/</span> Station Manager</div>
     </div>
     <div class="header-right">
-        <!-- Theme switcher -->
         <span class="theme-label">Theme</span>
         <div class="theme-switcher">
             <button class="theme-btn tb-dark" title="Dark" data-theme="dark"></button>
@@ -24,7 +23,6 @@
             <button class="theme-btn tb-light" title="Light" data-theme="light"></button>
             <button class="theme-btn tb-solarized" title="Solarized" data-theme="solarized"></button>
         </div>
-        <!-- Status -->
         <div class="status-dot" id="status-dot"></div>
         <div class="status-text" id="status-text">connecting…</div>
     </div>
@@ -47,18 +45,39 @@
             <span class="group-bar-count" id="group-bar-count">0 selected</span>
             <button class="group-btn g-preparing" id="group-preparing">⚡ Preparing</button>
             <button class="group-btn g-available" id="group-available">✓ Available</button>
+            <button class="group-btn g-stop" id="group-stop">⏹ Stop</button>
+            <button class="group-btn g-speed" id="group-speed">⚡ Speed</button>
             <button class="group-btn g-cancel" id="group-deselect">✕</button>
+        </div>
+        <!-- Group speed panel (hidden by default) -->
+        <div class="group-speed-panel" id="group-speed-panel" style="display:none;">
+            <div class="group-speed-row">
+                <label class="mv-label">Speed</label>
+                <input type="range" id="group-wh-slider" class="mv-slider"
+                       min="60" max="120000" step="60" value="600"/>
+                <span class="mv-value" id="group-wh-value">600 Wh/min</span>
+            </div>
+            <div class="mv-presets" style="margin-left:0;margin-top:6px;">
+                <button class="mv-preset-btn" data-wh="60">60</button>
+                <button class="mv-preset-btn" data-wh="120">120</button>
+                <button class="mv-preset-btn active" data-wh="600">600</button>
+                <button class="mv-preset-btn" data-wh="1200">1.2k</button>
+                <button class="mv-preset-btn" data-wh="3000">3k</button>
+                <button class="mv-preset-btn" data-wh="6000">6k</button>
+                <button class="mv-preset-btn" data-wh="12000">12k</button>
+            </div>
+            <div class="group-speed-footer">
+                <button class="mv-apply-btn" id="group-speed-apply">Apply to all</button>
+                <span class="mv-apply-status" id="group-speed-status"></span>
+            </div>
         </div>
         <div class="station-list" id="station-list"></div>
         <div class="add-form">
             <div class="section-label" style="padding-bottom:6px;">Add Station</div>
-
-            <!-- Mode toggle -->
             <div class="add-mode-toggle">
                 <button class="mode-btn active" id="mode-single">Single</button>
                 <button class="mode-btn" id="mode-batch">Batch</button>
             </div>
-
             <!-- SINGLE mode -->
             <div id="panel-single">
                 <label for="new-id"></label><input id="new-id" class="field" placeholder="Charge Point ID"/>
@@ -66,27 +85,24 @@
                 <label for="new-password"></label><input id="new-password" class="field" type="password" placeholder="Password (optional)"/>
                 <button class="btn-primary" id="btn-add" style="margin-top:2px;">+ Connect Station</button>
             </div>
-
             <!-- BATCH mode -->
             <div id="panel-batch" style="display:none;">
-                <div style="font-family:var(--mono),monospace;font-size:10px;color:var(--text3);margin-bottom:4px;">One ID per line</div>
-                <label for="batch-ids" class="sr-only">Charge Point IDs</label>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px;">One ID per line</div>
                 <textarea id="batch-ids" class="field" rows="5" placeholder="CP001&#10;CP002&#10;CP003" style="resize:vertical;"></textarea>
                 <label for="batch-endpoint"></label><input id="batch-endpoint" class="field" placeholder="Endpoint (optional, overrides default)"/>
                 <label for="batch-password"></label><input id="batch-password" class="field" type="password" placeholder="Password (optional)"/>
                 <button class="btn-primary" id="btn-batch" style="margin-top:2px;">⚡ Connect All</button>
                 <div id="batch-progress" style="display:none;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="font-family:var(--mono),monospace;font-size:10px;color:var(--text2);" id="batch-status-text">Connecting…</span>
-                        <span style="font-family:var(--mono),monospace;font-size:10px;color:var(--text3);" id="batch-counter">0/0</span>
+                        <span style="font-family:var(--mono);font-size:10px;color:var(--text2);" id="batch-status-text">Connecting…</span>
+                        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);" id="batch-counter">0/0</span>
                     </div>
                     <div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;">
                         <div id="batch-bar" style="height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .2s;"></div>
                     </div>
-                    <div id="batch-errors" style="margin-top:6px;font-family:var(--mono),monospace;font-size:10px;color:var(--red);max-height:60px;overflow-y:auto;"></div>
+                    <div id="batch-errors" style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--red);max-height:60px;overflow-y:auto;"></div>
                 </div>
             </div>
-
             <div class="form-msg" id="add-msg"></div>
         </div>
     </div>
@@ -102,8 +118,8 @@
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="commands">Commands</button>
                     <button class="tab-btn" data-tab="timeline">Timeline</button>
-                    <button class="tab-btn" data-tab="faults">Fault Injection</button>
                     <button class="tab-btn" data-tab="meter">MeterValues</button>
+                    <button class="tab-btn" data-tab="faults">Fault Injection</button>
                 </div>
 
                 <!-- Commands tab -->
@@ -121,14 +137,11 @@
                                 <div class="send-form">
                                     <div class="form-row">
                                         <label class="form-label">Action</label>
-                                        <label for="action"></label><input id="action" class="field"
-                                                                           placeholder="e.g. Heartbeat"/>
+                                        <label for="action"></label><input id="action" class="field" placeholder="e.g. Heartbeat"/>
                                     </div>
                                     <div class="form-row">
-                                        <label class="form-label">Payload <span
-                                                style="text-transform:none;letter-spacing:0;font-weight:400;">(JSON)</span></label>
-                                        <label for="payload"></label><textarea id="payload" class="field" rows="5"
-                                                                               spellcheck="false">{}</textarea>
+                                        <label class="form-label">Payload <span style="text-transform:none;letter-spacing:0;font-weight:400;">(JSON)</span></label>
+                                        <label for="payload"></label><textarea id="payload" class="field" rows="5" spellcheck="false">{}</textarea>
                                     </div>
                                     <div class="send-footer">
                                         <button class="btn-send" id="btn-send">Send ↗</button>
@@ -182,8 +195,7 @@
                                     </div>
                                     <div class="mv-row">
                                         <label class="mv-label" for="mv-wh">Speed</label>
-                                        <input type="range" id="mv-wh" class="mv-slider"
-                                               min="60" max="120000" step="60" value="600"/>
+                                        <input type="range" id="mv-wh" class="mv-slider" min="60" max="120000" step="60" value="600"/>
                                         <span class="mv-value" id="mv-wh-value">600 Wh/min</span>
                                     </div>
                                     <div class="mv-presets">
@@ -197,8 +209,7 @@
                                     </div>
                                     <div class="mv-row" style="margin-top:8px;">
                                         <label class="mv-label" for="mv-interval">Interval</label>
-                                        <input type="range" id="mv-interval" class="mv-slider"
-                                               min="5" max="300" step="5" value="15"/>
+                                        <input type="range" id="mv-interval" class="mv-slider" min="5" max="300" step="5" value="15"/>
                                         <span class="mv-value" id="mv-interval-value">15 s</span>
                                     </div>
                                     <div class="mv-interval-presets">

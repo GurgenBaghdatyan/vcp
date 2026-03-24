@@ -8,7 +8,7 @@ sendAdminCommand({
     transactionId: 1,
     timestamp: new Date(),
     meterStop: 2000,
-    reason: "Remote",
+    reason: "Other",
     itTag: "AABBCCDD"
   },
 });

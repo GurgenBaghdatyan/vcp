@@ -300,6 +300,36 @@ adminApi.post(
     },
 );
 
+// ── All transactions ─────────────────────────────────────────────────────────
+adminApi.get("/transactions/all", (c) => {
+    const result: {
+        chargePointId: string;
+        transactionId: string | number;
+        connectorId: number;
+        idTag: string;
+        meterValue: number;
+        whPerMinute: number;
+        intervalSec: number;
+        startedAt: Date;
+    }[] = [];
+    for (const entry of stations.values()) {
+        if (entry.status !== "connected") continue;
+        for (const t of entry.vcp.transactionManager.getActiveTransactions()) {
+            result.push({
+                chargePointId: entry.chargePointId,
+                transactionId: t.transactionId,
+                connectorId:   t.connectorId,
+                idTag:         t.idTag,
+                meterValue:    t.meterValue,
+                whPerMinute:   t.whPerMinute,
+                intervalSec:   t.intervalSec,
+                startedAt:     t.startedAt,
+            });
+        }
+    }
+    return c.json({ ok: true, transactions: result });
+});
+
 adminApi.get("/ui", (c) => {
     const html = fs.readFileSync(path.join(__dirname, "ui/station-manager.html"), "utf-8");
     return c.html(html);

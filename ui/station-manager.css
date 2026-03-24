@@ -523,18 +523,6 @@ header::after {
     gap: 6px;
 }
 
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
-    border: 0;
-}
-
 .field {
     width: 100%;
     padding: 7px 10px;
@@ -1671,6 +1659,94 @@ textarea.field {
 .btn-reconnect:disabled {
     opacity: 0.5;
     cursor: default;
+}
+
+
+/* ── Log OCPP rows ────────────────────────────────────────── */
+.log-ocpp-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background .1s;
+    min-height: 26px;
+}
+.log-ocpp-row:hover {
+    background: var(--surface2);
+}
+.log-ocpp-row.expanded {
+    background: var(--surface2);
+}
+.log-action {
+    font-family: var(--mono), serif;
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 500;
+}
+.log-type-badge {
+    font-family: var(--mono), serif;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    min-width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.lb-req {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.lb-res {
+    background: color-mix(in srgb, var(--green) 20%, transparent);
+    color: var(--green);
+    border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
+}
+.log-payload-row {
+    padding: 0 8px 6px 52px;
+    background: var(--surface2);
+    border-radius: 0 0 3px 3px;
+}
+
+
+/* ── Group stop / speed buttons ──────────────────────────── */
+.g-stop {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+}
+.g-stop:hover { opacity: .8; }
+
+.g-speed {
+    background: color-mix(in srgb, var(--yellow) 15%, transparent);
+    border-color: var(--yellow);
+    color: var(--yellow);
+}
+.g-speed:hover { opacity: .8; }
+
+/* ── Group speed panel ───────────────────────────────────── */
+.group-speed-panel {
+    padding: 10px 10px 8px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: fadeIn .12s ease;
+}
+.group-speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.group-speed-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
 }
 
 ::-webkit-scrollbar-track {

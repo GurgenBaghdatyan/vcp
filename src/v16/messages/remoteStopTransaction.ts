@@ -47,7 +47,7 @@ class RemoteStopTransactionOcppMessage extends OcppIncoming<
           transactionId: transactionId,
           meterStop: Math.floor(finalMeterValue),
           timestamp: new Date().toISOString(),
-          reason: "Remote",
+          reason: "Other",
           idTag: transaction.idTag,
           transactionData: [
             {
