@@ -24,7 +24,9 @@ interface StationEntry {
     vcp: VCP;
     chargePointId: string;
     endpoint: string;
+    password?: string;
     connectedAt: string;
+    status: "connected" | "disconnected";
 }
 
 const stations = new Map<string, StationEntry>();
@@ -56,21 +58,66 @@ async function spawnStation(chargePointId: string, endpoint: string, password?: 
         status: "Available",
     }));
 
-    stations.set(chargePointId, {vcp, chargePointId, endpoint, connectedAt: new Date().toISOString()});
+    stations.set(chargePointId, {
+        vcp,
+        chargePointId,
+        endpoint,
+        password,
+        connectedAt: new Date().toISOString(),
+        status: "connected",
+    });
 
     vcp.on("disconnected", () => {
-        logger.info(`Station ${chargePointId} disconnected unexpectedly — removing from registry`);
-        stations.delete(chargePointId);
+        logger.info(`Station ${chargePointId} disconnected unexpectedly — marking as disconnected`);
+        const entry = stations.get(chargePointId);
+        if (entry) entry.status = "disconnected";
     });
 }
-const adminApi = new Hono();
 
+async function reconnectStation(chargePointId: string): Promise<void> {
+    const entry = stations.get(chargePointId);
+    if (!entry) throw new Error(`Station ${chargePointId} not found`);
+    if (entry.status === "connected") throw new Error(`Station ${chargePointId} is already connected`);
+
+    const vcp = new VCP({
+        endpoint: entry.endpoint,
+        chargePointId,
+        ocppVersion: OcppVersion.OCPP_1_6,
+        basicAuthPassword: entry.password,
+    });
+
+    await vcp.connect();
+
+    vcp.send(bootNotificationOcppMessage.request({
+        chargePointVendor: "Solidstudio",
+        chargePointModel: "VirtualChargePoint",
+        chargePointSerialNumber: chargePointId,
+        firmwareVersion: "1.0.0",
+    }));
+
+    vcp.send(statusNotificationOcppMessage.request({
+        connectorId: 1,
+        errorCode: "NoError",
+        status: "Available",
+    }));
+
+    entry.vcp = vcp;
+    entry.connectedAt = new Date().toISOString();
+    entry.status = "connected";
+
+    vcp.on("disconnected", () => {
+        logger.info(`Station ${chargePointId} disconnected unexpectedly — marking as disconnected`);
+        const e = stations.get(chargePointId);
+        if (e) e.status = "disconnected";
+    });
+}
+
+const adminApi = new Hono();
 
 (async () => {
     await spawnStation(defaultCpId, defaultEndpoint, defaultPassword);
     console.log(`✅  Station ${defaultCpId} started. Admin UI → http://localhost:${adminPort}/ui`);
 })();
-
 
 adminApi.use("*", async (c, next) => {
     c.header("Access-Control-Allow-Origin", "*");
@@ -83,8 +130,8 @@ adminApi.use("*", async (c, next) => {
 adminApi.get("/health", (c) => c.text("OK"));
 
 adminApi.get("/stations", (c) =>
-    c.json([...stations.values()].map(({chargePointId, endpoint, connectedAt}) => ({
-        chargePointId, endpoint, connectedAt,
+    c.json([...stations.values()].map(({chargePointId, endpoint, connectedAt, status}) => ({
+        chargePointId, endpoint, connectedAt, status,
     }))),
 );
 
@@ -110,12 +157,19 @@ adminApi.delete("/stations/:id", (c) => {
     const id = c.req.param("id");
     const entry = stations.get(id);
     if (!entry) return c.json({ok: false, error: "Not found"}, 404);
-    try {
-        entry.vcp.close();
-    } catch {
-    }
+    try { entry.vcp.close(); } catch {}
     stations.delete(id);
     return c.json({ok: true});
+});
+
+adminApi.post("/stations/:id/reconnect", async (c) => {
+    const id = c.req.param("id");
+    try {
+        await reconnectStation(id);
+        return c.json({ok: true});
+    } catch (err: any) {
+        return c.json({ok: false, error: err.message}, 400);
+    }
 });
 
 adminApi.post(
@@ -125,6 +179,7 @@ adminApi.post(
         const id = c.req.param("id");
         const entry = stations.get(id);
         if (!entry) return c.json({ok: false, error: "Not found"}, 404);
+        if (entry.status === "disconnected") return c.json({ok: false, error: "Station is disconnected"}, 400);
         const {action, payload} = c.req.valid("json");
         entry.vcp.send(call(action, payload));
         return c.json({ok: true});
@@ -145,11 +200,9 @@ adminApi.get("/stations/:id/logs/stream", async (c) => {
     if (!entry) return c.json({ok: false, error: "Not found"}, 404);
 
     return streamSSE(c, async (stream) => {
-        // send current snapshot first
         const logs = await entry.vcp.getDiagnosticData();
         await stream.writeSSE({ data: JSON.stringify({ type: "snapshot", logs }) });
 
-        // then stream new entries
         await new Promise<void>((resolve) => {
             const onLog = async (info: object) => {
                 try {
@@ -175,10 +228,8 @@ adminApi.get("/stations/:id/traffic/stream", async (c) => {
     if (!entry) return c.json({ok: false, error: "Not found"}, 404);
 
     return streamSSE(c, async (stream) => {
-        // send existing snapshot first
         await stream.writeSSE({ data: JSON.stringify({ type: "snapshot", traffic: entry.vcp.getTrafficData() }) });
 
-        // then stream new entries live
         await new Promise<void>((resolve) => {
             const onTraffic = async (t: object) => {
                 try {
@@ -200,11 +251,12 @@ adminApi.get("/stations/:id/state", (c) => {
         chargePointId: entry.chargePointId,
         endpoint: entry.endpoint,
         connectedAt: entry.connectedAt,
+        status: entry.status,
         connectors,
     });
 });
 
-// ── Meter config ─────────────────────────────────────────────────────────────
+// ── Meter config ──────────────────────────────────────────────────────────────
 adminApi.get("/stations/:id/meter-config", (c) => {
     const id = c.req.param("id");
     const entry = stations.get(id);

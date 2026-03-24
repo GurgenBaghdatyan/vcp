@@ -37,11 +37,13 @@ async function renderStations() {
     for (const s of stations) {
         const id = s.chargePointId;
         const connectors = await fetchConnectors(id);
+        const isDisconnected = s.status === "disconnected";
         const card = document.createElement("div");
         const isSelected = prevSelected.has(id);
         card.className = "station-card" +
             (id === activeStation ? " active" : "") +
-            (isSelected ? " group-selected" : "");
+            (isSelected ? " group-selected" : "") +
+            (isDisconnected ? " disconnected" : "");
         const badgesHtml = Object.entries(connectors).map(([cid, status]) => {
             const cls = STATUS_CLASS[status] || "cb-other";
             return `<span class="connector-badge ${cls}">#${cid} ${status}</span>`;
@@ -52,9 +54,13 @@ async function renderStations() {
                 <div class="station-info">
                     <div class="station-id">${esc(id)}</div>
                     <div class="station-ep">${esc(s.endpoint)}</div>
+                    ${isDisconnected ? `<div class="station-disconnected-label">disconnected</div>` : ""}
                     ${badgesHtml ? `<div class="connector-badges">${badgesHtml}</div>` : ""}
                 </div>
-                <button class="btn-remove" title="Disconnect">✕</button>`;
+                ${isDisconnected
+            ? `<button class="btn-reconnect" title="Reconnect">↺</button>`
+            : `<button class="btn-remove" title="Disconnect">✕</button>`
+        }`;
 
         const cb = card.querySelector(".station-cb");
         cb.onchange = e => {
@@ -69,16 +75,43 @@ async function renderStations() {
             updateGroupBar();
         };
         card.onclick = e => {
-            if (e.target.classList.contains("btn-remove") || e.target.classList.contains("station-cb")) return;
+            if (e.target.classList.contains("btn-remove") ||
+                e.target.classList.contains("btn-reconnect") ||
+                e.target.classList.contains("station-cb")) return;
             selectStation(id);
         };
-        card.querySelector(".btn-remove").onclick = async e => {
-            e.stopPropagation();
-            await fetch("/stations/" + encodeURIComponent(id), {method: "DELETE"});
-            selectedStations.delete(id);
-            if (activeStation === id) deselectStation();
-            renderStations();
-        };
+
+        const removeBtn = card.querySelector(".btn-remove");
+        if (removeBtn) {
+            removeBtn.onclick = async e => {
+                e.stopPropagation();
+                await fetch("/stations/" + encodeURIComponent(id), {method: "DELETE"});
+                selectedStations.delete(id);
+                if (activeStation === id) deselectStation();
+                renderStations();
+            };
+        }
+
+        const reconnectBtn = card.querySelector(".btn-reconnect");
+        if (reconnectBtn) {
+            reconnectBtn.onclick = async e => {
+                e.stopPropagation();
+                reconnectBtn.textContent = "…";
+                reconnectBtn.disabled = true;
+                try {
+                    const d = await fetch("/stations/" + encodeURIComponent(id) + "/reconnect", {
+                        method: "POST",
+                    }).then(r => r.json());
+                    if (!d.ok) throw new Error(d.error || "Failed");
+                    renderStations();
+                } catch (err) {
+                    reconnectBtn.textContent = "↺";
+                    reconnectBtn.disabled = false;
+                    reconnectBtn.title = err.message;
+                }
+            };
+        }
+
         list.appendChild(card);
         stationCardMap.set(id, { el: card, statusEl: null });
     }
