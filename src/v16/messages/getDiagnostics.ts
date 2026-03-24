@@ -30,7 +30,9 @@ class GetDiagnosticsOcppMessage extends OcppIncoming<
   ): Promise<void> => {
     const fileName = `diagnostics_${new Date().toISOString()}.log`;
 
-    asyncUploadDiagnostics(vcp, call, fileName);
+    asyncUploadDiagnostics(vcp, call, fileName).catch((err) => {
+      console.error("Diagnostics upload failed:", err);
+    });
 
     vcp.respond(
       this.response(call, {

@@ -16,12 +16,12 @@ const RemoteStopTransactionResSchema = z.object({
 type RemoteStopTransactionResType = typeof RemoteStopTransactionResSchema;
 
 class RemoteStopTransactionOcppMessage extends OcppIncoming<
-  RemoteStopTransactionReqType,
-  RemoteStopTransactionResType
+    RemoteStopTransactionReqType,
+    RemoteStopTransactionResType
 > {
   reqHandler = async (
-    vcp: VCP,
-    call: OcppCall<z.infer<RemoteStopTransactionReqType>>,
+      vcp: VCP,
+      call: OcppCall<z.infer<RemoteStopTransactionReqType>>,
   ): Promise<void> => {
     const transactionId = call.payload.transactionId;
     const transaction = vcp.transactionManager.transactions.get(transactionId);
@@ -43,37 +43,46 @@ class RemoteStopTransactionOcppMessage extends OcppIncoming<
     });
 
     vcp.send(
-      stopTransactionOcppMessage.request({
-        transactionId: transactionId,
-        meterStop: Math.floor(finalMeterValue),
-        timestamp: new Date().toISOString(),
-        reason: "Remote",
-        idTag: transaction.idTag,
-        transactionData: [
-          {
-            timestamp: new Date().toISOString(),
-            sampledValue: [
-              {
-                value: JSON.stringify({
-                  signedMeterData: Buffer.from(ocmf).toString("base64"),
-                  encodingMethod: "OCMF",
-                  publicKey: getOCMFPublicKey().toString("base64"),
-                }),
-                format: "SignedData",
-                context: "Transaction.End",
-              },
-            ],
-          },
-        ],
-      }),
+        stopTransactionOcppMessage.request({
+          transactionId: transactionId,
+          meterStop: Math.floor(finalMeterValue),
+          timestamp: new Date().toISOString(),
+          reason: "Remote",
+          idTag: transaction.idTag,
+          transactionData: [
+            {
+              timestamp: new Date().toISOString(),
+              sampledValue: [
+                {
+                  value: JSON.stringify({
+                    signedMeterData: Buffer.from(ocmf).toString("base64"),
+                    encodingMethod: "OCMF",
+                    publicKey: getOCMFPublicKey().toString("base64"),
+                  }),
+                  format: "SignedData",
+                  context: "Transaction.End",
+                },
+              ],
+            },
+          ],
+        }),
     );
     vcp.send(
-      statusNotificationOcppMessage.request({
-        connectorId: transaction.connectorId,
-        errorCode: "NoError",
-        status: "Available",
-      }),
+        statusNotificationOcppMessage.request({
+          connectorId: transaction.connectorId,
+          errorCode: "NoError",
+          status: "Finishing",
+        }),
     );
+    setTimeout(() => {
+      vcp.send(
+          statusNotificationOcppMessage.request({
+            connectorId: transaction.connectorId,
+            errorCode: "NoError",
+            status: "Available",
+          }),
+      );
+    }, 2000);
   };
 }
 

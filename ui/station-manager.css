@@ -523,6 +523,18 @@ header::after {
     gap: 6px;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .field {
     width: 100%;
     padding: 7px 10px;
@@ -1487,7 +1499,7 @@ textarea.field {
     padding: 7px 10px;
     background: var(--surface2);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border1);
+    border: 1px solid var(--border2);
 }
 .mv-tx-label {
     font-family: var(--mono), serif;
