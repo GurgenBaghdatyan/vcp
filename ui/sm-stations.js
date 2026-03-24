@@ -20,6 +20,99 @@ async function fetchConnectors(id) {
     }
 }
 
+// ── Card factory ───────────────────────────────────────────────────────────
+function createCard(id, s, connectors) {
+    const isDisconnected = s.status === "disconnected";
+    const isSelected = selectedStations.has(id);
+    const card = document.createElement("div");
+    card.className = "station-card" +
+        (id === activeStation ? " active" : "") +
+        (isSelected ? " group-selected" : "") +
+        (isDisconnected ? " disconnected" : "");
+    card.dataset.stationId = id;
+
+    applyCardInner(card, id, s, connectors);
+    attachCardHandlers(card, id);
+    return card;
+}
+
+function applyCardInner(card, id, s, connectors) {
+    const isDisconnected = s.status === "disconnected";
+    const isSelected = selectedStations.has(id);
+    const badgesHtml = Object.entries(connectors).map(([cid, status]) => {
+        const cls = STATUS_CLASS[status] || "cb-other";
+        return `<span class="connector-badge ${cls}">#${cid} ${status}</span>`;
+    }).join("");
+
+    card.innerHTML = `
+        <input type="checkbox" class="station-cb" ${isSelected ? "checked" : ""}>
+        <div class="station-dot"></div>
+        <div class="station-info">
+            <div class="station-id">${esc(id)}</div>
+            <div class="station-ep">${esc(s.endpoint)}</div>
+            ${isDisconnected ? `<div class="station-disconnected-label">disconnected</div>` : ""}
+            ${badgesHtml ? `<div class="connector-badges">${badgesHtml}</div>` : ""}
+        </div>
+        ${isDisconnected
+        ? `<button class="btn-reconnect" title="Reconnect">↺</button>`
+        : `<button class="btn-remove" title="Disconnect">✕</button>`
+    }`;
+}
+
+function attachCardHandlers(card, id) {
+    const cb = card.querySelector(".station-cb");
+    cb.onchange = e => {
+        e.stopPropagation();
+        if (cb.checked) {
+            selectedStations.add(id);
+            card.classList.add("group-selected");
+        } else {
+            selectedStations.delete(id);
+            card.classList.remove("group-selected");
+        }
+        updateGroupBar();
+    };
+
+    card.onclick = e => {
+        if (e.target.classList.contains("btn-remove") ||
+            e.target.classList.contains("btn-reconnect") ||
+            e.target.classList.contains("station-cb")) return;
+        selectStation(id);
+    };
+
+    const removeBtn = card.querySelector(".btn-remove");
+    if (removeBtn) {
+        removeBtn.onclick = async e => {
+            e.stopPropagation();
+            await fetch("/stations/" + encodeURIComponent(id), {method: "DELETE"});
+            selectedStations.delete(id);
+            if (activeStation === id) deselectStation();
+            renderStations();
+        };
+    }
+
+    const reconnectBtn = card.querySelector(".btn-reconnect");
+    if (reconnectBtn) {
+        reconnectBtn.onclick = async e => {
+            e.stopPropagation();
+            reconnectBtn.textContent = "…";
+            reconnectBtn.disabled = true;
+            try {
+                const d = await fetch("/stations/" + encodeURIComponent(id) + "/reconnect", {
+                    method: "POST",
+                }).then(r => r.json());
+                if (!d.ok) throw new Error(d.error || "Failed");
+                renderStations();
+            } catch (err) {
+                reconnectBtn.textContent = "↺";
+                reconnectBtn.disabled = false;
+                reconnectBtn.title = err.message;
+            }
+        };
+    }
+}
+
+// ── Render stations (diff-based, no scroll reset) ─────────────────────────
 async function renderStations() {
     let stations = [];
     try {
@@ -27,94 +120,88 @@ async function renderStations() {
     } catch {
         return;
     }
+
     document.getElementById("station-count").textContent = stations.length;
     const list = document.getElementById("station-list");
-    list.innerHTML = "";
-    // rebuild card map preserving selected state & status badges
-    const prevSelected = new Set(selectedStations);
-    stationCardMap.clear();
+
+    const incomingIds = stations.map(s => s.chargePointId);
+    const existingIds = new Set(stationCardMap.keys());
+
+    // Remove cards that no longer exist
+    for (const id of existingIds) {
+        if (!incomingIds.includes(id)) {
+            stationCardMap.get(id).el.remove();
+            stationCardMap.delete(id);
+            selectedStations.delete(id);
+        }
+    }
 
     for (const s of stations) {
         const id = s.chargePointId;
         const connectors = await fetchConnectors(id);
         const isDisconnected = s.status === "disconnected";
-        const card = document.createElement("div");
-        const isSelected = prevSelected.has(id);
-        card.className = "station-card" +
-            (id === activeStation ? " active" : "") +
-            (isSelected ? " group-selected" : "") +
-            (isDisconnected ? " disconnected" : "");
-        const badgesHtml = Object.entries(connectors).map(([cid, status]) => {
-            const cls = STATUS_CLASS[status] || "cb-other";
-            return `<span class="connector-badge ${cls}">#${cid} ${status}</span>`;
-        }).join("");
-        card.innerHTML = `
-                <input type="checkbox" class="station-cb" ${isSelected ? "checked" : ""}>
-                <div class="station-dot"></div>
-                <div class="station-info">
-                    <div class="station-id">${esc(id)}</div>
-                    <div class="station-ep">${esc(s.endpoint)}</div>
-                    ${isDisconnected ? `<div class="station-disconnected-label">disconnected</div>` : ""}
-                    ${badgesHtml ? `<div class="connector-badges">${badgesHtml}</div>` : ""}
-                </div>
-                ${isDisconnected
-            ? `<button class="btn-reconnect" title="Reconnect">↺</button>`
-            : `<button class="btn-remove" title="Disconnect">✕</button>`
-        }`;
 
-        const cb = card.querySelector(".station-cb");
-        cb.onchange = e => {
-            e.stopPropagation();
-            if (cb.checked) {
-                selectedStations.add(id);
-                card.classList.add("group-selected");
-            } else {
-                selectedStations.delete(id);
-                card.classList.remove("group-selected");
+        if (stationCardMap.has(id)) {
+            // Card exists — update only what may have changed
+            const { el } = stationCardMap.get(id);
+
+            // Update classes
+            el.classList.toggle("active", id === activeStation);
+            el.classList.toggle("disconnected", isDisconnected);
+
+            // Update connector badges
+            const badgesHtml = Object.entries(connectors).map(([cid, status]) => {
+                const cls = STATUS_CLASS[status] || "cb-other";
+                return `<span class="connector-badge ${cls}">#${cid} ${status}</span>`;
+            }).join("");
+            const badgesEl = el.querySelector(".connector-badges");
+            const newBadgesHtml = badgesHtml
+                ? `<div class="connector-badges">${badgesHtml}</div>`
+                : "";
+            if (badgesEl) {
+                badgesEl.outerHTML = newBadgesHtml || "";
+            } else if (newBadgesHtml) {
+                el.querySelector(".station-info").insertAdjacentHTML("beforeend", newBadgesHtml);
             }
-            updateGroupBar();
-        };
-        card.onclick = e => {
-            if (e.target.classList.contains("btn-remove") ||
-                e.target.classList.contains("btn-reconnect") ||
-                e.target.classList.contains("station-cb")) return;
-            selectStation(id);
-        };
 
-        const removeBtn = card.querySelector(".btn-remove");
-        if (removeBtn) {
-            removeBtn.onclick = async e => {
-                e.stopPropagation();
-                await fetch("/stations/" + encodeURIComponent(id), {method: "DELETE"});
-                selectedStations.delete(id);
-                if (activeStation === id) deselectStation();
-                renderStations();
-            };
+            // Update disconnected label
+            const labelEl = el.querySelector(".station-disconnected-label");
+            if (isDisconnected && !labelEl) {
+                el.querySelector(".station-ep").insertAdjacentHTML(
+                    "afterend",
+                    `<div class="station-disconnected-label">disconnected</div>`
+                );
+            } else if (!isDisconnected && labelEl) {
+                labelEl.remove();
+            }
+
+            // Swap remove/reconnect button if status changed
+            const hasRemove = !!el.querySelector(".btn-remove");
+            const hasReconnect = !!el.querySelector(".btn-reconnect");
+            if (isDisconnected && hasRemove) {
+                el.querySelector(".btn-remove").outerHTML =
+                    `<button class="btn-reconnect" title="Reconnect">↺</button>`;
+                attachCardHandlers(el, id);
+            } else if (!isDisconnected && hasReconnect) {
+                el.querySelector(".btn-reconnect").outerHTML =
+                    `<button class="btn-remove" title="Disconnect">✕</button>`;
+                attachCardHandlers(el, id);
+            }
+
+        } else {
+            // New card — create and append
+            const card = createCard(id, s, connectors);
+            list.appendChild(card);
+            stationCardMap.set(id, { el: card, statusEl: null });
         }
-
-        const reconnectBtn = card.querySelector(".btn-reconnect");
-        if (reconnectBtn) {
-            reconnectBtn.onclick = async e => {
-                e.stopPropagation();
-                reconnectBtn.textContent = "…";
-                reconnectBtn.disabled = true;
-                try {
-                    const d = await fetch("/stations/" + encodeURIComponent(id) + "/reconnect", {
-                        method: "POST",
-                    }).then(r => r.json());
-                    if (!d.ok) throw new Error(d.error || "Failed");
-                    renderStations();
-                } catch (err) {
-                    reconnectBtn.textContent = "↺";
-                    reconnectBtn.disabled = false;
-                    reconnectBtn.title = err.message;
-                }
-            };
-        }
-
-        list.appendChild(card);
-        stationCardMap.set(id, { el: card, statusEl: null });
     }
+
+    // Re-order DOM to match server order
+    stations.forEach((s, i) => {
+        const entry = stationCardMap.get(s.chargePointId);
+        if (entry) list.appendChild(entry.el); // appendChild moves if already in DOM
+    });
+
     updateGroupBar();
 }
 
@@ -451,9 +538,9 @@ fetchHealth();
 setInterval(renderStations, 5000);
 setInterval(fetchHealth, 10000);
 setInterval(fetchLogs, 2000);
+
 // ── Group selection ─────────────────────────────────────────────────────────
 let selectedStations = new Set();
-// map of chargePointId -> {el, statusEl} for live badge updates
 const stationCardMap = new Map();
 
 function updateGroupBar() {
@@ -466,7 +553,6 @@ function updateGroupBar() {
         bar.style.display = "flex";
         countEl.textContent = n + " selected";
     }
-    // sync select-all checkbox state
     const allCb = document.getElementById("select-all-cb");
     const total = stationCardMap.size;
     allCb.indeterminate = n > 0 && n < total;
