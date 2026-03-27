@@ -256,7 +256,6 @@ adminApi.get("/stations/:id/state", (c) => {
     });
 });
 
-// ── Meter config ──────────────────────────────────────────────────────────────
 adminApi.get("/stations/:id/meter-config", (c) => {
     const id = c.req.param("id");
     const entry = stations.get(id);
@@ -300,7 +299,6 @@ adminApi.post(
     },
 );
 
-// ── All transactions ─────────────────────────────────────────────────────────
 adminApi.get("/transactions/all", (c) => {
     const result: {
         chargePointId: string;

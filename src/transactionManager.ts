@@ -68,6 +68,8 @@ export class TransactionManager {
       meterValuesTimer:    timer,
       meterValuesCallback: props.meterValuesCallback,
     });
+
+    props.meterValuesCallback({ ...state });
   }
 
   /**
@@ -110,20 +112,17 @@ export class TransactionManager {
     );
   }
 
-  // ── private ──────────────────────────────────────────────────────────────
 
   private _makeTimer(
       transactionId: TransactionId,
       callback: (s: TransactionState) => Promise<void>,
   ): ReturnType<typeof setInterval> {
-    // Read intervalSec lazily so the first tick uses the current value
     const getEntry = () => this._entries.get(transactionId);
 
     const fire = () => {
       const entry = getEntry();
       if (!entry) return;
 
-      // Wh per tick = (whPerMinute / 60) × intervalSec
       const whPerTick = (entry.whPerMinute / 60) * entry.intervalSec;
       entry.meterValue = Math.round(entry.meterValue + whPerTick);
 

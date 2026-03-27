@@ -57,7 +57,6 @@ class StartTransactionOcppMessage extends OcppOutgoing<
                                         location:  "Outlet",
                                     },
                                     {
-                                        // W = (Wh/min) / 60 * 1000  →  actually Wh/min * (1000/60) = W
                                         value:     Math.round(state.whPerMinute / 60 * 1000).toString(),
                                         measurand: "Power.Active.Import",
                                         unit:      "W",
